@@ -8,7 +8,9 @@
     "dev": "nodemon server.js",
     "test": "jest --runInBand",
     "test:coverage": "jest --runInBand --coverage",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "seed:demo": "node scripts/demoSeed.js",
+    "seed:demo:force": "node scripts/demoSeed.js --force"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
