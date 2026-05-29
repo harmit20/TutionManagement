@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Rounded square background -->
+  <rect width="512" height="512" rx="96" fill="#4f46e5"/>
+  <!-- Horizontal bar of the T -->
+  <rect x="112" y="144" width="288" height="56" rx="28" fill="white"/>
+  <!-- Vertical stem of the T -->
+  <rect x="228" y="144" width="56" height="228" rx="28" fill="white"/>
+</svg>

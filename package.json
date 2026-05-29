@@ -1,0 +1,15 @@
+{
+  "name": "tuition-management",
+  "private": true,
+  "description": "Cross-platform tuition management app — React PWA + Node/Express + MongoDB",
+  "scripts": {
+    "dev":   "concurrently -n server,client -c blue,green \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "build": "npm run icons --prefix client && npm run build --prefix client",
+    "test":  "npm test --prefix server && npm test --prefix client",
+    "seed":  "npm run seed --prefix server",
+    "install:all": "npm i --prefix server && npm i --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

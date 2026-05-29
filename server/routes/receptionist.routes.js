@@ -1,0 +1,34 @@
+const router = require('express').Router();
+const { protect } = require('../middleware/auth.middleware');
+const { permit } = require('../middleware/rbac.middleware');
+const enrollCtrl = require('../controllers/enrollment.controller');
+const feeCtrl = require('../controllers/fee.controller');
+const batchCtrl = require('../controllers/batch.controller');
+const timetableCtrl = require('../controllers/timetable.controller');
+
+router.use(protect);
+
+// Batches (read-only for enrollment forms)
+router.get('/batches', batchCtrl.listBatches);
+router.get('/batches/:id', batchCtrl.getBatch);
+router.get('/batches/:id/students', batchCtrl.getBatchStudents);
+
+// Enrollments
+router.get('/students', permit('ENROLLMENT_MANAGE'), enrollCtrl.listStudentsForEnrollment);
+router.post('/enrollments', permit('ENROLLMENT_MANAGE'), enrollCtrl.enrollStudent);
+router.delete('/enrollments/:studentId/:batchId', permit('ENROLLMENT_MANAGE'), enrollCtrl.unenrollStudent);
+
+// Fee collection
+router.get('/fees', permit('FEE_COLLECT'), feeCtrl.listFees);
+router.post('/fees', permit('FEE_COLLECT'), feeCtrl.createFeeRecord);
+router.patch('/fees/:id/collect', permit('FEE_COLLECT'), feeCtrl.collectPayment);
+router.get('/fees/:id/receipt', permit('FEE_COLLECT'), feeCtrl.getReceipt);
+
+// Timetable (read + schedule management)
+router.get('/timetable', timetableCtrl.getFullTimetable);
+router.get('/timetable/batches/:batchId', timetableCtrl.getBatchSchedule);
+router.get('/timetable/conflict-check', timetableCtrl.checkConflict);
+router.post('/timetable/batches/:batchId/slots', permit('TIMETABLE_MANAGE'), timetableCtrl.addScheduleSlot);
+router.delete('/timetable/batches/:batchId/slots/:slotIndex', permit('TIMETABLE_MANAGE'), timetableCtrl.removeScheduleSlot);
+
+module.exports = router;

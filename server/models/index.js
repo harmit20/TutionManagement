@@ -1,0 +1,15 @@
+module.exports = {
+  User: require('./User'),
+  StudentProfile: require('./StudentProfile'),
+  TeacherProfile: require('./TeacherProfile'),
+  Batch: require('./Batch'),
+  Classroom: require('./Classroom'),
+  FeeRecord: require('./FeeRecord'),
+  AttendanceRecord: require('./AttendanceRecord'),
+  PaymentLedger: require('./PaymentLedger'),
+  PricingRule: require('./PricingRule'),
+  Test: require('./Test'),
+  TestResult: require('./TestResult'),
+  StudyMaterial: require('./StudyMaterial'),
+  FCMToken: require('./FCMToken'),
+};
