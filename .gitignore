@@ -25,6 +25,11 @@ Thumbs.db
 .idea/
 .vscode/settings.json
 
+# Lock files — committed per project convention; uncomment to ignore
+# package-lock.json
+# server/package-lock.json
+# client/package-lock.json
+
 # Logs
 *.log
 npm-debug.log*
