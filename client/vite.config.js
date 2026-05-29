@@ -36,6 +36,14 @@ export default defineConfig({
     }),
   ],
 
+  // Tell esbuild (used by Vite's dep pre-bundler) to treat .js files as JSX
+  // so hooks that pass JSX to react-hot-toast don't cause "JSX not enabled" errors.
+  optimizeDeps: {
+    esbuildOptions: {
+      loader: { '.js': 'jsx' },
+    },
+  },
+
   server: {
     proxy: {
       '/api':     { target: 'http://localhost:5000', changeOrigin: true },
