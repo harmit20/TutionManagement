@@ -174,15 +174,13 @@ async function main() {
   const sCET = students.filter(s => s.cl === 'CET' ).map(s => s.sp._id);
   console.log(`✓  ${students.length} students`);
 
-  // ── 5. Pricing rules ─────────────────────────────────────────────────────────
+  // ── 5. Pricing rules (per lecturer) ──────────────────────────────────────────
   await PricingRule.insertMany([
-    { classLevel: '11th', subject: 'Physics',   ratePerLecture: 400, effectiveFrom: daysAgo(180), effectiveTo: null, createdBy: admin._id },
-    { classLevel: '11th', subject: 'Maths',     ratePerLecture: 400, effectiveFrom: daysAgo(180), effectiveTo: null, createdBy: admin._id },
-    { classLevel: '12th', subject: 'Physics',   ratePerLecture: 500, effectiveFrom: daysAgo(180), effectiveTo: null, createdBy: admin._id },
-    { classLevel: '12th', subject: 'Chemistry', ratePerLecture: 500, effectiveFrom: daysAgo(180), effectiveTo: null, createdBy: admin._id },
-    { classLevel: 'CET',  subject: 'Maths',     ratePerLecture: 600, effectiveFrom: daysAgo(180), effectiveTo: null, createdBy: admin._id },
+    { teacher: priya.tp._id, ratePerLecture: 500, effectiveFrom: daysAgo(180), effectiveTo: null, createdBy: admin._id },
+    { teacher: rahul.tp._id, ratePerLecture: 450, effectiveFrom: daysAgo(180), effectiveTo: null, createdBy: admin._id },
+    { teacher: sneha.tp._id, ratePerLecture: 400, effectiveFrom: daysAgo(180), effectiveTo: null, createdBy: admin._id },
   ]);
-  console.log('✓  5 pricing rules');
+  console.log('✓  3 pricing rules (one per lecturer)');
 
   // ── 6. Batches ────────────────────────────────────────────────────────────────
   const batchDefs = [
@@ -398,6 +396,7 @@ async function main() {
   Batches:  5   Attendance records: ${attCount}
   Fees:     ${feeCount}   Tests: ${testCount} (${resultCount} results)
   Payouts:  ${ledgerCount}   Materials: ${matDefs.length}
+  Pricing:  Priya ₹500/lec · Rahul ₹450/lec · Sneha ₹400/lec
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `);
 }
