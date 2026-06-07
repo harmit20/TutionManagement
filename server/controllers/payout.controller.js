@@ -11,19 +11,21 @@ exports.calculatePayout = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'teacherId, month, and year are required' });
   }
 
-  const teacher = await TeacherProfile.findById(teacherId);
+  // teacherId may be a User _id (from admin UI) or TeacherProfile _id — resolve either
+  let teacher = await TeacherProfile.findById(teacherId).catch(() => null);
+  if (!teacher) teacher = await TeacherProfile.findOne({ user: teacherId });
   if (!teacher) return res.status(404).json({ message: 'Teacher profile not found' });
 
-  const { lines, totalAmount, totalLectures } = await buildPayoutLines(teacherId, Number(month), Number(year));
+  const { lines, totalAmount, totalLectures } = await buildPayoutLines(teacher._id, Number(month), Number(year));
 
   // Upsert: recalculating replaces the ledger (only if still pending)
-  const existing = await PaymentLedger.findOne({ teacher: teacherId, month, year });
+  const existing = await PaymentLedger.findOne({ teacher: teacher._id, month, year });
   if (existing && existing.status === 'paid') {
     return res.status(409).json({ message: 'Payout for this period is already marked as paid' });
   }
 
   const ledger = await PaymentLedger.findOneAndUpdate(
-    { teacher: teacherId, month: Number(month), year: Number(year) },
+    { teacher: teacher._id, month: Number(month), year: Number(year) },
     { lines, totalAmount, totalLectures, status: 'pending' },
     { upsert: true, new: true }
   );
