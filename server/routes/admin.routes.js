@@ -15,7 +15,9 @@ router.get('/dashboard', adminCtrl.getDashboard);
 // Users
 router.get('/users', adminCtrl.listUsers);
 router.post('/users', permit('USER_CREATE'), authCtrl.createUser);
+router.get('/users/:id', adminCtrl.getUser);
 router.patch('/users/:id', permit('USER_UPDATE'), authCtrl.updateUser);
+router.patch('/users/:id/profile', permit('USER_UPDATE'), adminCtrl.updateUserProfile);
 router.patch('/users/:id/password', permit('USER_UPDATE'), authCtrl.changePassword);
 
 // Batches

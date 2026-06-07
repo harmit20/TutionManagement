@@ -71,6 +71,49 @@ exports.listUsers = asyncHandler(async (req, res) => {
   res.json({ users, total, page: Number(page), pages: Math.ceil(total / limit) });
 });
 
+// ─── User detail + profile update ────────────────────────────────────────────
+
+exports.getUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id).select('-passwordHash');
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  let profile = null;
+  if (user.role === 'student')
+    profile = await StudentProfile.findOne({ user: user._id });
+  else if (user.role === 'teacher')
+    profile = await TeacherProfile.findOne({ user: user._id });
+
+  res.json({ user, profile });
+});
+
+exports.updateUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id).select('-passwordHash');
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  // Always update base user fields if provided
+  const { name, phone, classLevel, parentName, parentPhone, enrollmentNumber, qualifications, subjects } = req.body;
+  if (name !== undefined) user.name = name;
+  if (phone !== undefined) user.phone = phone;
+  await user.save();
+
+  let profile = null;
+  if (user.role === 'student') {
+    profile = await StudentProfile.findOneAndUpdate(
+      { user: user._id },
+      { classLevel, parentName, parentPhone, enrollmentNumber },
+      { new: true, runValidators: true }
+    );
+  } else if (user.role === 'teacher') {
+    profile = await TeacherProfile.findOneAndUpdate(
+      { user: user._id },
+      { qualifications, subjects },
+      { new: true, runValidators: true }
+    );
+  }
+
+  res.json({ user, profile });
+});
+
 // ─── Pricing Rules ────────────────────────────────────────────────────────────
 
 exports.listPricingRules = asyncHandler(async (req, res) => {

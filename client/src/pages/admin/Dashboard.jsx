@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { UsersIcon, AcademicCapIcon, BookOpenIcon, ExclamationTriangleIcon, CurrencyRupeeIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import Spinner from '../../components/shared/Spinner';
 import PageHeader from '../../components/shared/PageHeader';
 
-function StatCard({ label, value, icon: Icon, color }) {
+function StatCard({ label, value, icon: Icon, color, to }) {
   const colors = {
     indigo: 'bg-indigo-50 text-indigo-600',
     blue:   'bg-blue-50 text-blue-600',
@@ -13,7 +14,7 @@ function StatCard({ label, value, icon: Icon, color }) {
     green:  'bg-green-50 text-green-600',
   };
   return (
-    <div className="card flex items-center gap-4">
+    <Link to={to} className="card flex items-center gap-4 hover:shadow-md hover:ring-1 hover:ring-indigo-100 transition-all cursor-pointer">
       <div className={`p-3 rounded-xl ${colors[color]}`}>
         <Icon className="h-6 w-6" />
       </div>
@@ -21,7 +22,7 @@ function StatCard({ label, value, icon: Icon, color }) {
         <p className="text-2xl font-bold text-gray-900">{value ?? '—'}</p>
         <p className="text-sm text-gray-500">{label}</p>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -38,10 +39,10 @@ export default function Dashboard() {
       <PageHeader title="Dashboard" subtitle="Overview of your tuition centre" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Total Students" value={data?.totalStudents}  icon={UsersIcon}                color="indigo" />
-        <StatCard label="Teachers"       value={data?.totalTeachers}  icon={AcademicCapIcon}          color="blue"   />
-        <StatCard label="Active Batches" value={data?.totalBatches}   icon={BookOpenIcon}             color="purple" />
-        <StatCard label="Pending Fees"   value={data?.pendingFees}    icon={ExclamationTriangleIcon}  color="yellow" />
+        <StatCard label="Total Students" value={data?.totalStudents}  icon={UsersIcon}               color="indigo" to="/admin/users?role=student" />
+        <StatCard label="Teachers"       value={data?.totalTeachers}  icon={AcademicCapIcon}         color="blue"   to="/admin/users?role=teacher" />
+        <StatCard label="Active Batches" value={data?.totalBatches}   icon={BookOpenIcon}            color="purple" to="/receptionist/enrollments" />
+        <StatCard label="Pending Fees"   value={data?.pendingFees}    icon={ExclamationTriangleIcon} color="yellow" to="/receptionist/fees"        />
       </div>
 
       <div className="card mb-6">
