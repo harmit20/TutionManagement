@@ -66,10 +66,7 @@ export default function PaymentLedger() {
             <div className="divide-y divide-gray-50 max-h-72 overflow-y-auto">
               {detail.lines?.map((line, i) => (
                 <div key={i} className="flex justify-between py-2.5 text-sm">
-                  <div>
-                    <p className="text-gray-900">{new Date(line.lectureDate).toLocaleDateString('en-IN')}</p>
-                    <p className="text-xs text-gray-500">{line.pricingSnapshot?.classLevel} · {line.pricingSnapshot?.subject}</p>
-                  </div>
+                  <p className="text-gray-900">{new Date(line.lectureDate).toLocaleDateString('en-IN')}</p>
                   <span className="font-medium text-gray-900">₹{line.rateApplied}</span>
                 </div>
               ))}

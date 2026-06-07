@@ -17,7 +17,7 @@ async function buildPayoutLines(teacherId, month, year) {
   const records = await AttendanceRecord.find({
     teacher: teacherId,
     date: { $gte: start, $lte: end },
-  }).populate({ path: 'batch', select: 'classLevel subject name' });
+  }).populate({ path: 'batch', select: 'name' });
 
   const lines = [];
   let totalAmount = 0;
@@ -25,18 +25,16 @@ async function buildPayoutLines(teacherId, month, year) {
   for (const record of records) {
     if (!record.batch) continue;
 
-    const { classLevel, subject } = record.batch;
     const lectureDate = startOfDay(record.date);
 
-    // Most-recently-started rule that covers this lecture date
+    // Most-recently-started rule for this teacher that covers this lecture date
     const rule = await PricingRule.findOne({
-      classLevel,
-      subject,
+      teacher: teacherId,
       effectiveFrom: { $lte: endOfDay(lectureDate) },
       $or: [{ effectiveTo: null }, { effectiveTo: { $gte: lectureDate } }],
     }).sort({ effectiveFrom: -1 });
 
-    if (!rule) continue; // no pricing configured — skip silently
+    if (!rule) continue; // no pricing configured for this teacher — skip silently
 
     lines.push({
       attendanceRecord: record._id,
@@ -44,8 +42,6 @@ async function buildPayoutLines(teacherId, month, year) {
       batch: record.batch._id,
       rateApplied: rule.ratePerLecture,
       pricingSnapshot: {
-        classLevel: rule.classLevel,
-        subject: rule.subject,
         ratePerLecture: rule.ratePerLecture,
         effectiveFrom: rule.effectiveFrom,
         effectiveTo: rule.effectiveTo,

@@ -6,8 +6,6 @@ const LEDGER_STATUS = ['pending', 'paid', 'on_hold'];
 // historical accuracy even if rates change later
 const pricingSnapshotSchema = new mongoose.Schema(
   {
-    classLevel: String,
-    subject: String,
     ratePerLecture: Number,
     effectiveFrom: Date,
     effectiveTo: Date,

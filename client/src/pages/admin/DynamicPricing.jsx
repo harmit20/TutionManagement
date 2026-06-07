@@ -8,8 +8,7 @@ import Spinner from '../../components/shared/Spinner';
 import Modal from '../../components/shared/Modal';
 import EmptyState from '../../components/shared/EmptyState';
 
-const CLASS_LEVELS = ['11th', '12th', 'CET'];
-const blank = { classLevel: '11th', subject: '', ratePerLecture: '', effectiveFrom: format(new Date(), 'yyyy-MM-dd') };
+const blank = { teacher: '', ratePerLecture: '', effectiveFrom: format(new Date(), 'yyyy-MM-dd') };
 
 export default function DynamicPricing() {
   const qc = useQueryClient();
@@ -19,6 +18,11 @@ export default function DynamicPricing() {
   const { data: rules, isLoading } = useQuery({
     queryKey: ['pricing-rules'],
     queryFn: () => api.get('/admin/pricing-rules').then((r) => r.data),
+  });
+
+  const { data: teacherData } = useQuery({
+    queryKey: ['admin-users-teachers'],
+    queryFn: () => api.get('/admin/users', { params: { role: 'teacher' } }).then((r) => r.data),
   });
 
   const createMutation = useMutation({
@@ -34,8 +38,8 @@ export default function DynamicPricing() {
   return (
     <div>
       <PageHeader
-        title="Dynamic Pricing"
-        subtitle="Set per-lecture rates by class and subject"
+        title="Lecturer Pay Rates"
+        subtitle="Set per-lecture rates for each lecturer"
         action={<button className="btn-primary" onClick={() => setModal(true)}>+ New Rule</button>}
       />
 
@@ -46,15 +50,14 @@ export default function DynamicPricing() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>{['Class','Subject','Rate / Lecture','Effective From','Effective To','Created By'].map((h) => (
+                <tr>{['Lecturer','Rate / Lecture','Effective From','Effective To','Created By'].map((h) => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>
                 ))}</tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {rules.map((r) => (
                   <tr key={r._id} className={`hover:bg-gray-50 ${!r.effectiveTo ? 'bg-green-50/40' : ''}`}>
-                    <td className="px-4 py-3 font-medium">{r.classLevel}</td>
-                    <td className="px-4 py-3">{r.subject}</td>
+                    <td className="px-4 py-3 font-medium">{r.teacher?.user?.name ?? '—'}</td>
                     <td className="px-4 py-3 font-semibold text-indigo-700">₹{r.ratePerLecture}</td>
                     <td className="px-4 py-3 text-gray-600">{format(new Date(r.effectiveFrom), 'dd MMM yyyy')}</td>
                     <td className="px-4 py-3 text-gray-600">
@@ -84,14 +87,11 @@ export default function DynamicPricing() {
       >
         <div className="space-y-3">
           <div>
-            <label className="label">Class Level</label>
-            <select className="input" value={form.classLevel} onChange={(e) => set('classLevel', e.target.value)}>
-              {CLASS_LEVELS.map((c) => <option key={c}>{c}</option>)}
+            <label className="label">Lecturer</label>
+            <select className="input" value={form.teacher} onChange={(e) => set('teacher', e.target.value)}>
+              <option value="">Select lecturer…</option>
+              {teacherData?.users?.map((u) => <option key={u._id} value={u._id}>{u.name}</option>)}
             </select>
-          </div>
-          <div>
-            <label className="label">Subject</label>
-            <input className="input" placeholder="e.g. Physics" value={form.subject} onChange={(e) => set('subject', e.target.value)} />
           </div>
           <div>
             <label className="label">Rate per Lecture (₹)</label>
@@ -101,7 +101,7 @@ export default function DynamicPricing() {
             <label className="label">Effective From</label>
             <input className="input" type="date" value={form.effectiveFrom} onChange={(e) => set('effectiveFrom', e.target.value)} />
           </div>
-          <p className="text-xs text-gray-500">Any currently active rule for the same class + subject will be automatically closed one day before this date.</p>
+          <p className="text-xs text-gray-500">Any currently active rule for the same lecturer will be automatically closed one day before this date.</p>
         </div>
       </Modal>
     </div>

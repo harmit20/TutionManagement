@@ -29,13 +29,13 @@ describe('buildPayoutLines', () => {
 
     // Rule 1: ₹500 — Jan 1–15
     await PricingRule.create({
-      classLevel: '11th', subject: 'Physics', ratePerLecture: 500,
+      teacher: teacher._id, ratePerLecture: 500,
       effectiveFrom: new Date('2024-01-01'), effectiveTo: new Date('2024-01-15'),
       createdBy: admin._id,
     });
     // Rule 2: ₹600 — Jan 16 onwards (still active)
     await PricingRule.create({
-      classLevel: '11th', subject: 'Physics', ratePerLecture: 600,
+      teacher: teacher._id, ratePerLecture: 600,
       effectiveFrom: new Date('2024-01-16'), effectiveTo: null,
       createdBy: admin._id,
     });
@@ -61,7 +61,7 @@ describe('buildPayoutLines', () => {
     const { admin, teacher, batch } = await scaffold();
 
     const rule = await PricingRule.create({
-      classLevel: '11th', subject: 'Physics', ratePerLecture: 500,
+      teacher: teacher._id, ratePerLecture: 500,
       effectiveFrom: new Date('2024-01-01'), effectiveTo: null,
       createdBy: admin._id,
     });
@@ -75,7 +75,7 @@ describe('buildPayoutLines', () => {
     expect(lines[0].pricingSnapshot.pricingRuleId.toString()).toBe(rule._id.toString());
   });
 
-  it('skips lectures whose class+subject has no matching pricing rule', async () => {
+  it('skips lectures when teacher has no matching pricing rule', async () => {
     const { teacher, batch } = await scaffold();
     // No PricingRule created at all
     await AttendanceRecord.create({
@@ -91,7 +91,7 @@ describe('buildPayoutLines', () => {
     const { admin, teacher, batch } = await scaffold();
 
     await PricingRule.create({
-      classLevel: '11th', subject: 'Physics', ratePerLecture: 400,
+      teacher: teacher._id, ratePerLecture: 400,
       effectiveFrom: new Date('2024-01-01'), effectiveTo: null, createdBy: admin._id,
     });
 
@@ -106,5 +106,26 @@ describe('buildPayoutLines', () => {
     expect(jan.totalLectures).toBe(1);
     expect(feb.totalLectures).toBe(1);
     expect(jan.totalAmount).toBe(400);
+  });
+
+  it('uses separate rates for different teachers', async () => {
+    const user2    = await User.create({ name: 'Teacher2', email: 't2@test.com', passwordHash: 'x', role: 'teacher' });
+    const admin    = await User.create({ name: 'Admin2',   email: 'a2@test.com', passwordHash: 'x', role: 'admin' });
+    const teacher1 = await TeacherProfile.create({ user: (await User.create({ name: 'T1', email: 't1@test.com', passwordHash: 'x', role: 'teacher' }))._id });
+    const teacher2 = await TeacherProfile.create({ user: user2._id });
+    const batch1   = await Batch.create({ name: 'B1', classLevel: '11th', subject: 'Math', assignedTeacher: teacher1._id });
+    const batch2   = await Batch.create({ name: 'B2', classLevel: '12th', subject: 'Math', assignedTeacher: teacher2._id });
+
+    await PricingRule.create({ teacher: teacher1._id, ratePerLecture: 300, effectiveFrom: new Date('2024-01-01'), effectiveTo: null, createdBy: admin._id });
+    await PricingRule.create({ teacher: teacher2._id, ratePerLecture: 700, effectiveFrom: new Date('2024-01-01'), effectiveTo: null, createdBy: admin._id });
+
+    await AttendanceRecord.create({ batch: batch1._id, teacher: teacher1._id, date: new Date('2024-01-10'), students: [] });
+    await AttendanceRecord.create({ batch: batch2._id, teacher: teacher2._id, date: new Date('2024-01-10'), students: [] });
+
+    const r1 = await buildPayoutLines(teacher1._id, 1, 2024);
+    const r2 = await buildPayoutLines(teacher2._id, 1, 2024);
+
+    expect(r1.totalAmount).toBe(300);
+    expect(r2.totalAmount).toBe(700);
   });
 });

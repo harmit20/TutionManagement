@@ -76,27 +76,30 @@ exports.listUsers = asyncHandler(async (req, res) => {
 exports.listPricingRules = asyncHandler(async (req, res) => {
   const rules = await PricingRule.find()
     .populate('createdBy', 'name')
-    .sort({ classLevel: 1, subject: 1, effectiveFrom: -1 });
+    .populate({ path: 'teacher', populate: { path: 'user', select: 'name' } })
+    .sort({ effectiveFrom: -1 });
   res.json(rules);
 });
 
 exports.createPricingRule = asyncHandler(async (req, res) => {
-  const { classLevel, subject, ratePerLecture, effectiveFrom } = req.body;
-  if (!classLevel || !subject || ratePerLecture == null || !effectiveFrom) {
-    return res.status(400).json({ message: 'classLevel, subject, ratePerLecture, effectiveFrom are required' });
+  const { teacher: userId, ratePerLecture, effectiveFrom } = req.body;
+  if (!userId || ratePerLecture == null || !effectiveFrom) {
+    return res.status(400).json({ message: 'teacher, ratePerLecture, effectiveFrom are required' });
   }
+
+  const profile = await TeacherProfile.findOne({ user: userId });
+  if (!profile) return res.status(404).json({ message: 'Teacher profile not found' });
 
   const from = new Date(effectiveFrom);
 
-  // Close out any open rule for the same class+subject that would overlap
+  // Close out any open rule for the same teacher that would overlap
   await PricingRule.updateMany(
-    { classLevel, subject, effectiveTo: null, effectiveFrom: { $lt: from } },
+    { teacher: profile._id, effectiveTo: null, effectiveFrom: { $lt: from } },
     { effectiveTo: new Date(from.getTime() - 86400000) } // day before new rule starts
   );
 
   const rule = await PricingRule.create({
-    classLevel,
-    subject,
+    teacher: profile._id,
     ratePerLecture,
     effectiveFrom: from,
     effectiveTo: null,

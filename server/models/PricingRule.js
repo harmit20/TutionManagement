@@ -1,18 +1,11 @@
 const mongoose = require('mongoose');
 
-const CLASS_LEVELS = ['11th', '12th', 'CET'];
-
 const pricingRuleSchema = new mongoose.Schema(
   {
-    classLevel: {
-      type: String,
-      enum: CLASS_LEVELS,
+    teacher: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'TeacherProfile',
       required: true,
-    },
-    subject: {
-      type: String,
-      required: true,
-      trim: true,
     },
     ratePerLecture: {
       type: Number,
@@ -37,7 +30,7 @@ const pricingRuleSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Payout engine queries: classLevel + subject + date range overlap
-pricingRuleSchema.index({ classLevel: 1, subject: 1, effectiveFrom: 1, effectiveTo: 1 });
+// Payout engine queries: teacher + date range overlap
+pricingRuleSchema.index({ teacher: 1, effectiveFrom: 1, effectiveTo: 1 });
 
 module.exports = mongoose.model('PricingRule', pricingRuleSchema);
