@@ -7,7 +7,7 @@ import PageHeader from '../../components/shared/PageHeader';
 import Badge from '../../components/shared/Badge';
 import Spinner from '../../components/shared/Spinner';
 import Modal from '../../components/shared/Modal';
-import EmptyState from '../../components/shared/EmptyState';
+import DataTable from '../../components/shared/DataTable';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const now = new Date();
@@ -49,38 +49,27 @@ export default function TeacherPayouts() {
         action={<button className="btn-primary" onClick={() => setCalcModal(true)}>Calculate Payout</button>}
       />
 
-      <div className="card overflow-hidden p-0">
-        {!payouts?.ledgers?.length ? <EmptyState title="No payouts yet" description="Calculate a payout to get started" /> : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>{['Teacher','Period','Lectures','Amount','Status','Actions'].map((h) => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>
-                ))}</tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {payouts.ledgers.map((l) => (
-                  <tr key={l._id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">{l.teacher?.user?.name}</td>
-                    <td className="px-4 py-3 text-gray-600">{MONTHS[l.month - 1]} {l.year}</td>
-                    <td className="px-4 py-3">{l.totalLectures}</td>
-                    <td className="px-4 py-3 font-medium">₹{l.totalAmount.toLocaleString('en-IN')}</td>
-                    <td className="px-4 py-3"><Badge label={l.status} /></td>
-                    <td className="px-4 py-3">
-                      {l.status !== 'paid' && (
-                        <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700" onClick={() => payMutation.mutate(l._id)}>
-                          Mark Paid
-                        </button>
-                      )}
-                      {l.status === 'paid' && <span className="text-xs text-gray-400">Paid {l.paidOn ? format(new Date(l.paidOn), 'dd MMM') : ''}</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <DataTable
+        rows={payouts?.ledgers}
+        empty={{
+          title: 'No payouts yet',
+          description: 'Calculate a payout to get started',
+          action: <button className="btn-primary" onClick={() => setCalcModal(true)}>Calculate Payout</button>,
+        }}
+        columns={[
+          { header: 'Teacher', render: (l) => l.teacher?.user?.name, className: 'font-medium' },
+          { header: 'Period', render: (l) => `${MONTHS[l.month - 1]} ${l.year}`, className: 'text-gray-600' },
+          { header: 'Lectures', render: (l) => l.totalLectures },
+          { header: 'Amount', render: (l) => `₹${l.totalAmount.toLocaleString('en-IN')}`, className: 'font-medium' },
+          { header: 'Status', render: (l) => <Badge label={l.status} /> },
+          {
+            header: 'Actions',
+            render: (l) => l.status !== 'paid'
+              ? <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700" onClick={() => payMutation.mutate(l._id)}>Mark Paid</button>
+              : <span className="text-xs text-gray-400">Paid {l.paidOn ? format(new Date(l.paidOn), 'dd MMM') : ''}</span>,
+          },
+        ]}
+      />
 
       <Modal
         open={calcModal}

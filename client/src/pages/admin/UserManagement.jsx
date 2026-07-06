@@ -5,9 +5,9 @@ import toast from 'react-hot-toast';
 import api from '../../services/api';
 import PageHeader from '../../components/shared/PageHeader';
 import Badge from '../../components/shared/Badge';
-import Spinner from '../../components/shared/Spinner';
 import Modal from '../../components/shared/Modal';
-import EmptyState from '../../components/shared/EmptyState';
+import DataTable from '../../components/shared/DataTable';
+import FilterBar from '../../components/shared/FilterBar';
 
 const ROLES = ['admin', 'receptionist', 'teacher', 'student'];
 const CLASS_LEVELS = ['11th', '12th', 'CET'];
@@ -107,54 +107,45 @@ export default function UserManagement() {
         action={<button className="btn-primary" onClick={() => setModal(true)}>+ New User</button>}
       />
 
-      {/* Filters */}
-      <div className="flex gap-3 mb-4 flex-wrap">
+      <FilterBar className="mb-4">
         <input className="input max-w-xs" placeholder="Search name or email…" value={search} onChange={(e) => setSearch(e.target.value)} />
         <select className="input w-40" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
           <option value="">All roles</option>
           {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
-      </div>
+      </FilterBar>
 
-      {isLoading ? <Spinner /> : (
-        <div className="card overflow-hidden p-0">
-          {!data?.users?.length ? <EmptyState title="No users found" /> : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-100">
-                  <tr>{['Name','Email','Role','Status','Actions'].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>
-                  ))}</tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {data.users.map((u) => (
-                    <tr key={u._id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{u.name}</td>
-                      <td className="px-4 py-3 text-gray-600">{u.email}</td>
-                      <td className="px-4 py-3"><Badge label={u.role} /></td>
-                      <td className="px-4 py-3"><Badge label={u.isActive ? 'active' : 'inactive'} /></td>
-                      <td className="px-4 py-3 flex items-center gap-3">
-                        <button
-                          className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
-                          onClick={() => openEdit(u)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className={`text-xs font-medium ${u.isActive ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}`}
-                          onClick={() => toggleMutation.mutate({ id: u._id, isActive: !u.isActive })}
-                        >
-                          {u.isActive ? 'Deactivate' : 'Activate'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
+      <DataTable
+        isLoading={isLoading}
+        rows={data?.users}
+        empty={{
+          title: 'No users found',
+          description: search || roleFilter ? 'Try changing the search or role filter.' : 'Create the first account to get started.',
+          action: !search && !roleFilter && <button className="btn-primary" onClick={() => setModal(true)}>+ New User</button>,
+        }}
+        columns={[
+          { header: 'Name', render: (u) => u.name, className: 'font-medium text-gray-900' },
+          { header: 'Email', render: (u) => u.email, className: 'text-gray-600' },
+          { header: 'Role', render: (u) => <Badge label={u.role} /> },
+          { header: 'Status', render: (u) => <Badge label={u.isActive ? 'active' : 'inactive'} /> },
+          {
+            header: 'Actions',
+            render: (u) => (
+              <div className="flex items-center gap-3">
+                <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700" onClick={() => openEdit(u)}>
+                  Edit
+                </button>
+                <button
+                  className={`text-xs font-medium ${u.isActive ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}`}
+                  onClick={() => toggleMutation.mutate({ id: u._id, isActive: !u.isActive })}
+                >
+                  {u.isActive ? 'Deactivate' : 'Activate'}
+                </button>
+              </div>
+            ),
+          },
+        ]}
+      />
 
       {/* Create User Modal */}
       <Modal

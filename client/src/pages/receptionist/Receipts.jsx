@@ -6,7 +6,7 @@ import PageHeader from '../../components/shared/PageHeader';
 import Badge from '../../components/shared/Badge';
 import Spinner from '../../components/shared/Spinner';
 import Modal from '../../components/shared/Modal';
-import EmptyState from '../../components/shared/EmptyState';
+import DataTable from '../../components/shared/DataTable';
 
 export default function Receipts() {
   const [selected, setSelected] = useState(null);
@@ -28,31 +28,19 @@ export default function Receipts() {
     <div>
       <PageHeader title="Receipts" subtitle="View and print payment receipts" />
 
-      {isLoading ? <Spinner /> : !fees?.records?.length ? <EmptyState title="No paid fees yet" /> : (
-        <div className="card overflow-hidden p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>{['Receipt No.','Student','Batch','Amount Paid','Date',''].map((h) => <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>)}</tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {fees.records.map((f) => (
-                  <tr key={f._id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-700">{f.receiptNumber || '—'}</td>
-                    <td className="px-4 py-3 font-medium">{f.student?.user?.name}</td>
-                    <td className="px-4 py-3 text-gray-600">{f.batch?.name}</td>
-                    <td className="px-4 py-3 font-semibold">₹{f.amountPaid}</td>
-                    <td className="px-4 py-3 text-gray-600">{f.paidDate ? format(new Date(f.paidDate), 'dd MMM yyyy') : '—'}</td>
-                    <td className="px-4 py-3">
-                      <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700" onClick={() => setSelected(f._id)}>View</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      <DataTable
+        isLoading={isLoading}
+        rows={fees?.records}
+        empty={{ title: 'No paid fees yet', description: 'Receipts appear here once payments are collected.' }}
+        columns={[
+          { header: 'Receipt No.', render: (f) => f.receiptNumber || '—', className: 'font-mono text-xs text-gray-700' },
+          { header: 'Student', render: (f) => f.student?.user?.name, className: 'font-medium' },
+          { header: 'Batch', render: (f) => f.batch?.name, className: 'text-gray-600' },
+          { header: 'Amount Paid', render: (f) => `₹${f.amountPaid}`, className: 'font-semibold' },
+          { header: 'Date', render: (f) => f.paidDate ? format(new Date(f.paidDate), 'dd MMM yyyy') : '—', className: 'text-gray-600' },
+          { header: '', render: (f) => <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700" onClick={() => setSelected(f._id)}>View</button> },
+        ]}
+      />
 
       {/* Receipt Modal */}
       <Modal open={!!selected} onClose={() => setSelected(null)} title="Payment Receipt"

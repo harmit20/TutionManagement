@@ -5,9 +5,9 @@ import { format } from 'date-fns';
 import api from '../../services/api';
 import PageHeader from '../../components/shared/PageHeader';
 import Badge from '../../components/shared/Badge';
-import Spinner from '../../components/shared/Spinner';
 import Modal from '../../components/shared/Modal';
-import EmptyState from '../../components/shared/EmptyState';
+import DataTable from '../../components/shared/DataTable';
+import FilterBar, { PillGroup } from '../../components/shared/FilterBar';
 
 const METHODS = ['cash','upi','bank_transfer','cheque','online'];
 const blank = { studentId:'', batchId:'', amount:'', dueDate: format(new Date(),'yyyy-MM-dd'), forMonth: new Date().getMonth()+1, forYear: new Date().getFullYear() };
@@ -46,37 +46,34 @@ export default function FeeCollection() {
     <div>
       <PageHeader title="Fee Collection" action={<button className="btn-primary" onClick={() => setAddModal(true)}>+ Add Fee</button>} />
 
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {['pending','partial','paid','overdue'].map((s) => (
-          <button key={s} onClick={() => setStatusFilter(s)} className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize transition-colors ${statusFilter === s ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{s}</button>
-        ))}
-      </div>
+      <FilterBar className="mb-4">
+        <PillGroup options={['pending','partial','paid','overdue']} value={statusFilter} onChange={setStatusFilter} />
+      </FilterBar>
 
-      {isLoading ? <Spinner /> : !fees?.records?.length ? <EmptyState title={`No ${statusFilter} fees`} /> : (
-        <div className="card overflow-hidden p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-100">
-                <tr>{['Student','Batch','Amount','Due Date','Status',''].map((h) => <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>)}</tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {fees.records.map((f) => (
-                  <tr key={f._id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">{f.student?.user?.name}</td>
-                    <td className="px-4 py-3 text-gray-600">{f.batch?.name}</td>
-                    <td className="px-4 py-3">₹{f.amount} {f.amountPaid > 0 && <span className="text-xs text-gray-400">(paid ₹{f.amountPaid})</span>}</td>
-                    <td className="px-4 py-3 text-gray-600">{format(new Date(f.dueDate), 'dd MMM yyyy')}</td>
-                    <td className="px-4 py-3"><Badge label={f.status} /></td>
-                    <td className="px-4 py-3">
-                      {f.status !== 'paid' && <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700" onClick={() => { setPayModal(f); setPayForm({ amountPaid: f.amount - f.amountPaid, paymentMethod: 'cash' }); }}>Collect</button>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      <DataTable
+        isLoading={isLoading}
+        rows={fees?.records}
+        empty={{
+          title: `No ${statusFilter} fees`,
+          description: statusFilter === 'pending' ? 'Add a fee record to start tracking collections.' : undefined,
+          action: statusFilter === 'pending' && <button className="btn-primary" onClick={() => setAddModal(true)}>+ Add Fee</button>,
+        }}
+        columns={[
+          { header: 'Student', render: (f) => f.student?.user?.name, className: 'font-medium' },
+          { header: 'Batch', render: (f) => f.batch?.name, className: 'text-gray-600' },
+          { header: 'Amount', render: (f) => <>₹{f.amount} {f.amountPaid > 0 && <span className="text-xs text-gray-400">(paid ₹{f.amountPaid})</span>}</> },
+          { header: 'Due Date', render: (f) => format(new Date(f.dueDate), 'dd MMM yyyy'), className: 'text-gray-600' },
+          { header: 'Status', render: (f) => <Badge label={f.status} /> },
+          {
+            header: '',
+            render: (f) => f.status !== 'paid' && (
+              <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700" onClick={() => { setPayModal(f); setPayForm({ amountPaid: f.amount - f.amountPaid, paymentMethod: 'cash' }); }}>
+                Collect
+              </button>
+            ),
+          },
+        ]}
+      />
 
       {/* Add Fee Modal */}
       <Modal open={addModal} onClose={() => setAddModal(false)} title="Add Fee Record"
