@@ -7,13 +7,15 @@ import Badge from '../../components/shared/Badge';
 import Spinner from '../../components/shared/Spinner';
 import Modal from '../../components/shared/Modal';
 import DataTable from '../../components/shared/DataTable';
+import Pagination from '../../components/shared/Pagination';
 
 export default function Receipts() {
   const [selected, setSelected] = useState(null);
+  const [page, setPage] = useState(1);
 
   const { data: fees, isLoading } = useQuery({
-    queryKey: ['fees-paid'],
-    queryFn: () => api.get('/receptionist/fees', { params: { status: 'paid' } }).then((r) => r.data),
+    queryKey: ['fees-paid', page],
+    queryFn: () => api.get('/receptionist/fees', { params: { status: 'paid', page } }).then((r) => r.data),
   });
 
   const { data: receipt, isLoading: loadingReceipt } = useQuery({
@@ -41,6 +43,7 @@ export default function Receipts() {
           { header: '', render: (f) => <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700" onClick={() => setSelected(f._id)}>View</button> },
         ]}
       />
+      <Pagination page={fees?.page} pages={fees?.pages} total={fees?.total} onPage={setPage} />
 
       {/* Receipt Modal */}
       <Modal open={!!selected} onClose={() => setSelected(null)} title="Payment Receipt"

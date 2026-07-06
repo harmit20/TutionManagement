@@ -16,16 +16,19 @@ app.use(cors({
   credentials: true,
 }));
 
+// Relaxed limits outside production so local development isn't throttled
+const isProd = process.env.NODE_ENV === 'production';
+
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: isProd ? 200 : 5000,
   standardHeaders: true,
   legacyHeaders: false,
 }));
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 15,
+  max: isProd ? 15 : 500,
   message: { message: 'Too many auth requests, try again later.' },
 });
 

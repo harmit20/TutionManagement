@@ -8,6 +8,7 @@ import Badge from '../../components/shared/Badge';
 import Modal from '../../components/shared/Modal';
 import DataTable from '../../components/shared/DataTable';
 import FilterBar from '../../components/shared/FilterBar';
+import Pagination from '../../components/shared/Pagination';
 
 const ROLES = ['admin', 'receptionist', 'teacher', 'student'];
 const CLASS_LEVELS = ['11th', '12th', 'CET'];
@@ -19,6 +20,7 @@ export default function UserManagement() {
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState(searchParams.get('role') ?? '');
+  const [page, setPage] = useState(1);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(blank);
 
@@ -28,8 +30,8 @@ export default function UserManagement() {
   const [editForm, setEditForm] = useState({});
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-users', search, roleFilter],
-    queryFn: () => api.get('/admin/users', { params: { search, role: roleFilter } }).then((r) => r.data),
+    queryKey: ['admin-users', search, roleFilter, page],
+    queryFn: () => api.get('/admin/users', { params: { search, role: roleFilter, page } }).then((r) => r.data),
   });
 
   const createMutation = useMutation({
@@ -108,8 +110,8 @@ export default function UserManagement() {
       />
 
       <FilterBar className="mb-4">
-        <input className="input max-w-xs" placeholder="Search name or email…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select className="input w-40" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+        <input className="input max-w-xs" placeholder="Search name or email…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+        <select className="input w-40" value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}>
           <option value="">All roles</option>
           {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
@@ -146,6 +148,7 @@ export default function UserManagement() {
           },
         ]}
       />
+      <Pagination page={data?.page} pages={data?.pages} total={data?.total} onPage={setPage} />
 
       {/* Create User Modal */}
       <Modal

@@ -8,6 +8,7 @@ import Badge from '../../components/shared/Badge';
 import Modal from '../../components/shared/Modal';
 import DataTable from '../../components/shared/DataTable';
 import FilterBar, { PillGroup } from '../../components/shared/FilterBar';
+import Pagination from '../../components/shared/Pagination';
 
 const METHODS = ['cash','upi','bank_transfer','cheque','online'];
 const blank = { studentId:'', batchId:'', amount:'', dueDate: format(new Date(),'yyyy-MM-dd'), forMonth: new Date().getMonth()+1, forYear: new Date().getFullYear() };
@@ -15,14 +16,15 @@ const blank = { studentId:'', batchId:'', amount:'', dueDate: format(new Date(),
 export default function FeeCollection() {
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState('pending');
+  const [page, setPage] = useState(1);
   const [addModal, setAddModal]   = useState(false);
   const [payModal, setPayModal]   = useState(null); // fee record
   const [form, setForm]           = useState(blank);
   const [payForm, setPayForm]     = useState({ amountPaid:'', paymentMethod:'cash' });
 
   const { data: fees, isLoading } = useQuery({
-    queryKey: ['fees', statusFilter],
-    queryFn: () => api.get('/receptionist/fees', { params: { status: statusFilter } }).then((r) => r.data),
+    queryKey: ['fees', statusFilter, page],
+    queryFn: () => api.get('/receptionist/fees', { params: { status: statusFilter, page } }).then((r) => r.data),
   });
 
   const { data: students } = useQuery({ queryKey: ['enroll-students',''], queryFn: () => api.get('/receptionist/students').then((r) => r.data) });
@@ -47,7 +49,7 @@ export default function FeeCollection() {
       <PageHeader title="Fee Collection" action={<button className="btn-primary" onClick={() => setAddModal(true)}>+ Add Fee</button>} />
 
       <FilterBar className="mb-4">
-        <PillGroup options={['pending','partial','paid','overdue']} value={statusFilter} onChange={setStatusFilter} />
+        <PillGroup options={['pending','partial','paid','overdue']} value={statusFilter} onChange={(s) => { setStatusFilter(s); setPage(1); }} />
       </FilterBar>
 
       <DataTable
@@ -74,6 +76,7 @@ export default function FeeCollection() {
           },
         ]}
       />
+      <Pagination page={fees?.page} pages={fees?.pages} total={fees?.total} onPage={setPage} />
 
       {/* Add Fee Modal */}
       <Modal open={addModal} onClose={() => setAddModal(false)} title="Add Fee Record"
