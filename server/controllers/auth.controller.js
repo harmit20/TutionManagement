@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const StudentProfile = require('../models/StudentProfile');
 const TeacherProfile = require('../models/TeacherProfile');
+const { audit } = require('../utils/audit');
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
 
@@ -109,6 +110,7 @@ exports.createUser = async (req, res) => {
     return res.status(err.status || 500).json({ message: err.message });
   }
 
+  audit(req, 'user.create', 'User', user._id, { role, email });
   res.status(201).json({ user: userPayload(user) });
 };
 
@@ -124,6 +126,7 @@ exports.updateUser = async (req, res) => {
   );
 
   if (!user) return res.status(404).json({ message: 'User not found' });
+  audit(req, isActive === false ? 'user.deactivate' : 'user.update', 'User', user._id, { name, phone, isActive });
   res.json({ user: userPayload(user) });
 };
 
@@ -142,5 +145,6 @@ exports.changePassword = async (req, res) => {
   user.passwordHash = newPassword; // pre-save hook re-hashes
   await user.save();
 
+  audit(req, 'user.changePassword', 'User', user._id);
   res.json({ message: 'Password updated' });
 };

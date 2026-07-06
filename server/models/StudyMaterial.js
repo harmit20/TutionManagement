@@ -49,6 +49,11 @@ const studyMaterialSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Soft delete — deleted materials are hidden from queries but retained
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

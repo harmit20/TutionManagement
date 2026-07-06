@@ -1,6 +1,7 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Batch = require('../models/Batch');
 const StudentProfile = require('../models/StudentProfile');
+const { audit } = require('../utils/audit');
 
 exports.enrollStudent = asyncHandler(async (req, res) => {
   const { studentId, batchId } = req.body;
@@ -29,6 +30,7 @@ exports.enrollStudent = asyncHandler(async (req, res) => {
     StudentProfile.findByIdAndUpdate(studentId, { $addToSet: { batches: batchId } }),
   ]);
 
+  audit(req, 'enrollment.enroll', 'StudentProfile', studentId, { batchId });
   res.status(201).json({ message: 'Student enrolled successfully' });
 });
 
@@ -40,6 +42,7 @@ exports.unenrollStudent = asyncHandler(async (req, res) => {
     StudentProfile.findByIdAndUpdate(studentId, { $pull: { batches: batchId } }),
   ]);
 
+  audit(req, 'enrollment.unenroll', 'StudentProfile', studentId, { batchId });
   res.json({ message: 'Student unenrolled successfully' });
 });
 

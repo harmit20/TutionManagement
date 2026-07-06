@@ -8,6 +8,8 @@ const AttendanceRecord = require('../models/AttendanceRecord');
 const PricingRule = require('../models/PricingRule');
 const PaymentLedger = require('../models/PaymentLedger');
 const Classroom = require('../models/Classroom');
+const AuditLog = require('../models/AuditLog');
+const { audit } = require('../utils/audit');
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
@@ -149,6 +151,7 @@ exports.createPricingRule = asyncHandler(async (req, res) => {
     createdBy: req.user._id,
   });
 
+  audit(req, 'pricing.create', 'PricingRule', rule._id, { teacherId: profile._id, ratePerLecture });
   res.status(201).json(rule);
 });
 
@@ -175,6 +178,25 @@ exports.updateClassroom = asyncHandler(async (req, res) => {
   });
   if (!classroom) return res.status(404).json({ message: 'Classroom not found' });
   res.json(classroom);
+});
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+
+exports.listAuditLogs = asyncHandler(async (req, res) => {
+  const { action, entityType, page = 1, limit = 25 } = req.query;
+  const filter = {};
+  if (action) filter.action = action;
+  if (entityType) filter.entityType = entityType;
+
+  const [logs, total] = await Promise.all([
+    AuditLog.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit)),
+    AuditLog.countDocuments(filter),
+  ]);
+
+  res.json({ logs, total, page: Number(page), pages: Math.ceil(total / limit) });
 });
 
 // ─── Reports ──────────────────────────────────────────────────────────────────

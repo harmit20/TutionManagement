@@ -12,4 +12,5 @@ module.exports = {
   TestResult: require('./TestResult'),
   StudyMaterial: require('./StudyMaterial'),
   FCMToken: require('./FCMToken'),
+  AuditLog: require('./AuditLog'),
 };

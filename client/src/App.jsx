@@ -11,6 +11,7 @@ import UserManagement   from './pages/admin/UserManagement';
 import TeacherPayouts   from './pages/admin/TeacherPayouts';
 import DynamicPricing   from './pages/admin/DynamicPricing';
 import AdminReports     from './pages/admin/Reports';
+import AuditLog         from './pages/admin/AuditLog';
 
 // Receptionist
 import Enrollments  from './pages/receptionist/Enrollments';
@@ -57,6 +58,7 @@ function App() {
         <Route path="admin/payouts" element={<ProtectedRoute allowedRoles={['admin']}><TeacherPayouts /></ProtectedRoute>} />
         <Route path="admin/pricing" element={<ProtectedRoute allowedRoles={['admin']}><DynamicPricing /></ProtectedRoute>} />
         <Route path="admin/reports" element={<ProtectedRoute allowedRoles={['admin']}><AdminReports /></ProtectedRoute>} />
+        <Route path="admin/audit"   element={<ProtectedRoute allowedRoles={['admin']}><AuditLog /></ProtectedRoute>} />
 
         {/* Receptionist */}
         <Route path="receptionist/enrollments" element={<ProtectedRoute allowedRoles={['admin','receptionist']}><Enrollments /></ProtectedRoute>} />

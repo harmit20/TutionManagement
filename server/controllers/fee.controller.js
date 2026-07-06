@@ -1,6 +1,7 @@
 const asyncHandler = require('../utils/asyncHandler');
 const FeeRecord = require('../models/FeeRecord');
 const StudentProfile = require('../models/StudentProfile');
+const { audit } = require('../utils/audit');
 
 const generateReceiptNumber = () =>
   `RCP-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
@@ -23,6 +24,7 @@ exports.createFeeRecord = asyncHandler(async (req, res) => {
     status: 'pending',
   });
 
+  audit(req, 'fee.create', 'FeeRecord', record._id, { studentId, batchId, amount });
   res.status(201).json(record);
 });
 
@@ -45,6 +47,7 @@ exports.collectPayment = asyncHandler(async (req, res) => {
   record.status = record.amountPaid >= record.amount ? 'paid' : 'partial';
 
   await record.save();
+  audit(req, 'fee.collect', 'FeeRecord', record._id, { amountPaid, paymentMethod, newStatus: record.status });
   res.json(record);
 });
 
