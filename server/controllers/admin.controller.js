@@ -180,6 +180,24 @@ exports.updateClassroom = asyncHandler(async (req, res) => {
   res.json(classroom);
 });
 
+// ─── Parent linking ───────────────────────────────────────────────────────────
+
+exports.linkParentChildren = asyncHandler(async (req, res) => {
+  const { childStudentIds = [] } = req.body;
+  const parent = await User.findOne({ _id: req.params.userId, role: 'parent' });
+  if (!parent) return res.status(404).json({ message: 'Parent user not found' });
+
+  // Replace this parent's links with the given set
+  await StudentProfile.updateMany({ parentUser: parent._id }, { $unset: { parentUser: 1 } });
+  if (childStudentIds.length) {
+    await StudentProfile.updateMany({ _id: { $in: childStudentIds } }, { parentUser: parent._id });
+  }
+
+  audit(req, 'parent.linkChildren', 'User', parent._id, { childStudentIds });
+  const children = await StudentProfile.find({ parentUser: parent._id }).populate('user', 'name');
+  res.json({ children });
+});
+
 // ─── Audit Log ────────────────────────────────────────────────────────────────
 
 exports.listAuditLogs = asyncHandler(async (req, res) => {

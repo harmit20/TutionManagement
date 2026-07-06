@@ -48,6 +48,9 @@ router.get('/reports/attendance', adminCtrl.attendanceReport);
 // Audit log
 router.get('/audit-logs', adminCtrl.listAuditLogs);
 
+// Parent → children linking
+router.patch('/parents/:userId/children', permit('USER_UPDATE'), adminCtrl.linkParentChildren);
+
 // Student search + full profile summary
 router.get('/students/search', studentSummaryCtrl.searchStudents);
 router.get('/students/:id/summary', studentSummaryCtrl.getStudentSummary);

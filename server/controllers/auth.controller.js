@@ -104,6 +104,11 @@ exports.createUser = async (req, res) => {
       await StudentProfile.create({ user: user._id, enrollmentNumber, classLevel, parentName, parentPhone, address, dateOfBirth });
     } else if (role === 'teacher') {
       await TeacherProfile.create({ user: user._id, ...profileData });
+    } else if (role === 'parent' && profileData.childStudentIds?.length) {
+      await StudentProfile.updateMany(
+        { _id: { $in: profileData.childStudentIds } },
+        { parentUser: user._id }
+      );
     }
   } catch (err) {
     await User.findByIdAndDelete(user._id);

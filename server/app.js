@@ -45,6 +45,7 @@ app.use('/api/admin',                      require('./routes/admin.routes'));
 app.use('/api/receptionist',               require('./routes/receptionist.routes'));
 app.use('/api/teacher',                    require('./routes/teacher.routes'));
 app.use('/api/student',                    require('./routes/student.routes'));
+app.use('/api/parent',                     require('./routes/parent.routes'));
 app.use('/api/timetable',                  require('./routes/timetable.routes'));
 app.use('/api/notifications',              require('./routes/notification.routes'));
 

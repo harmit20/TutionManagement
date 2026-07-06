@@ -32,6 +32,11 @@ const studentProfileSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    // Linked parent login — one parent account can be linked to several children
+    parentUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     address: {
       type: String,
       trim: true,

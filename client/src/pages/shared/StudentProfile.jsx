@@ -20,11 +20,13 @@ function StatTile({ label, value, accent = 'text-gray-900' }) {
 export default function StudentProfile() {
   const { id } = useParams();
   const { user } = useAuth();
-  const base = user?.role === 'admin' ? '/admin' : '/receptionist';
+  const endpoint = user?.role === 'parent'
+    ? `/parent/children/${id}/summary`
+    : `${user?.role === 'admin' ? '/admin' : '/receptionist'}/students/${id}/summary`;
 
   const { data, isLoading } = useQuery({
     queryKey: ['student-summary', id],
-    queryFn: () => api.get(`${base}/students/${id}/summary`).then((r) => r.data),
+    queryFn: () => api.get(endpoint).then((r) => r.data),
   });
 
   if (isLoading) return <Spinner />;

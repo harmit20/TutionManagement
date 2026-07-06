@@ -10,10 +10,10 @@ import DataTable from '../../components/shared/DataTable';
 import FilterBar from '../../components/shared/FilterBar';
 import Pagination from '../../components/shared/Pagination';
 
-const ROLES = ['admin', 'receptionist', 'teacher', 'student'];
+const ROLES = ['admin', 'receptionist', 'teacher', 'student', 'parent'];
 const CLASS_LEVELS = ['11th', '12th', 'CET'];
 
-const blank = { name: '', email: '', password: '', role: 'student', phone: '', enrollmentNumber: '', classLevel: '11th', parentName: '', parentPhone: '' };
+const blank = { name: '', email: '', password: '', role: 'student', phone: '', enrollmentNumber: '', classLevel: '11th', parentName: '', parentPhone: '', childStudentIds: [] };
 
 export default function UserManagement() {
   const qc = useQueryClient();
@@ -32,6 +32,13 @@ export default function UserManagement() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-users', search, roleFilter, page],
     queryFn: () => api.get('/admin/users', { params: { search, role: roleFilter, page } }).then((r) => r.data),
+  });
+
+  // Student list for linking children to a parent account
+  const { data: allStudents } = useQuery({
+    queryKey: ['students-for-linking'],
+    queryFn: () => api.get('/receptionist/students', { params: { limit: 200 } }).then((r) => r.data),
+    enabled: modal && form.role === 'parent',
   });
 
   const createMutation = useMutation({
@@ -177,6 +184,28 @@ export default function UserManagement() {
               {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
+          {form.role === 'parent' && (
+            <div>
+              <label className="label">Children <span className="text-gray-400 font-normal">(select the parent's students)</span></label>
+              <div className="border border-gray-300 rounded-lg max-h-44 overflow-y-auto divide-y divide-gray-50">
+                {!allStudents?.length ? (
+                  <p className="px-3 py-2.5 text-sm text-gray-400">No students available</p>
+                ) : allStudents.map((s) => (
+                  <label key={s._id} className="flex items-center gap-2.5 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      checked={form.childStudentIds.includes(s._id)}
+                      onChange={(e) => set('childStudentIds', e.target.checked
+                        ? [...form.childStudentIds, s._id]
+                        : form.childStudentIds.filter((id) => id !== s._id))}
+                    />
+                    <span>{s.user?.name} <span className="text-xs text-gray-400">({s.enrollmentNumber} · {s.classLevel})</span></span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
           {form.role === 'student' && (
             <>
               <div>

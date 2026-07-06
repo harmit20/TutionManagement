@@ -33,6 +33,9 @@ const NAV = {
     { to: '/student/attendance', icon: CalendarDaysIcon,  label: 'Attendance' },
     { to: '/student/materials',  icon: FolderOpenIcon,    label: 'Materials' },
   ],
+  parent: [
+    { to: '/parent', icon: UsersIcon, label: 'My Children', end: true },
+  ],
 };
 
 export default function Sidebar() {

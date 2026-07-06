@@ -16,6 +16,9 @@ import AuditLog         from './pages/admin/AuditLog';
 // Shared (admin + receptionist)
 import StudentProfile   from './pages/shared/StudentProfile';
 
+// Parent
+import MyChildren       from './pages/parent/MyChildren';
+
 // Receptionist
 import Enrollments  from './pages/receptionist/Enrollments';
 import FeeCollection from './pages/receptionist/FeeCollection';
@@ -38,6 +41,7 @@ const ROLE_HOME = {
   receptionist: '/receptionist/enrollments',
   teacher: '/teacher/batches',
   student: '/student/fees',
+  parent: '/parent',
 };
 
 function RoleRedirect() {
@@ -75,6 +79,10 @@ function App() {
         <Route path="teacher/batches"    element={<ProtectedRoute allowedRoles={['teacher']}><MyBatches /></ProtectedRoute>} />
         <Route path="teacher/attendance" element={<ProtectedRoute allowedRoles={['teacher']}><Attendance /></ProtectedRoute>} />
         <Route path="teacher/payouts"    element={<ProtectedRoute allowedRoles={['teacher']}><PaymentLedger /></ProtectedRoute>} />
+
+        {/* Parent */}
+        <Route path="parent"                    element={<ProtectedRoute allowedRoles={['parent']}><MyChildren /></ProtectedRoute>} />
+        <Route path="parent/children/:id"       element={<ProtectedRoute allowedRoles={['parent']}><StudentProfile /></ProtectedRoute>} />
 
         {/* Student */}
         <Route path="student/fees"       element={<ProtectedRoute allowedRoles={['student']}><FeeStatus /></ProtectedRoute>} />
