@@ -16,6 +16,7 @@ export default function TeacherPayouts() {
   const qc = useQueryClient();
   const [calcModal, setCalcModal] = useState(false);
   const [calc, setCalc] = useState({ teacherId: '', month: now.getMonth() + 1, year: now.getFullYear() });
+  const [payConfirm, setPayConfirm] = useState(null); // ledger to confirm before marking paid
 
   const { data: payouts, isLoading } = useQuery({
     queryKey: ['admin-payouts'],
@@ -35,7 +36,7 @@ export default function TeacherPayouts() {
 
   const payMutation = useMutation({
     mutationFn: (id) => api.patch(`/admin/payouts/${id}/pay`),
-    onSuccess: () => { toast.success('Marked as paid'); qc.invalidateQueries({ queryKey: ['admin-payouts'] }); },
+    onSuccess: () => { toast.success('Marked as paid'); qc.invalidateQueries({ queryKey: ['admin-payouts'] }); setPayConfirm(null); },
     onError: () => toast.error('Failed to update payout'),
   });
 
@@ -65,11 +66,39 @@ export default function TeacherPayouts() {
           {
             header: 'Actions',
             render: (l) => l.status !== 'paid'
-              ? <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700" onClick={() => payMutation.mutate(l._id)}>Mark Paid</button>
+              ? <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700" onClick={() => setPayConfirm(l)}>Mark Paid</button>
               : <span className="text-xs text-gray-400">Paid {l.paidOn ? format(new Date(l.paidOn), 'dd MMM') : ''}</span>,
           },
         ]}
       />
+
+      {/* Confirm before recording the payout as paid */}
+      <Modal
+        open={!!payConfirm}
+        onClose={() => setPayConfirm(null)}
+        title="Confirm Payout"
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => setPayConfirm(null)}>Cancel</button>
+            <button className="btn-primary" disabled={payMutation.isPending} onClick={() => payMutation.mutate(payConfirm._id)}>
+              {payMutation.isPending ? 'Saving…' : 'Confirm — Mark Paid'}
+            </button>
+          </>
+        }
+      >
+        {payConfirm && (
+          <div className="space-y-2 text-sm">
+            <p className="text-gray-600">Mark this payout as paid?</p>
+            <div className="bg-gray-50 rounded-lg p-4 space-y-1.5">
+              <div className="flex justify-between"><span className="text-gray-500">Teacher</span><strong>{payConfirm.teacher?.user?.name}</strong></div>
+              <div className="flex justify-between"><span className="text-gray-500">Period</span><span>{MONTHS[payConfirm.month - 1]} {payConfirm.year}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Lectures</span><span>{payConfirm.totalLectures}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Amount</span><strong className="text-lg">₹{payConfirm.totalAmount.toLocaleString('en-IN')}</strong></div>
+            </div>
+            <p className="text-xs text-gray-400">This cannot be recalculated once marked paid.</p>
+          </div>
+        )}
+      </Modal>
 
       <Modal
         open={calcModal}

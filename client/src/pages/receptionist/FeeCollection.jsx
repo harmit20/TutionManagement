@@ -9,6 +9,8 @@ import Modal from '../../components/shared/Modal';
 import DataTable from '../../components/shared/DataTable';
 import FilterBar, { PillGroup } from '../../components/shared/FilterBar';
 import Pagination from '../../components/shared/Pagination';
+import ReceiptView from '../../components/shared/ReceiptView';
+import Spinner from '../../components/shared/Spinner';
 
 const METHODS = ['cash','upi','bank_transfer','cheque','online'];
 const blank = { studentId:'', batchId:'', amount:'', dueDate: format(new Date(),'yyyy-MM-dd'), forMonth: new Date().getMonth()+1, forYear: new Date().getFullYear() };
@@ -21,6 +23,8 @@ export default function FeeCollection() {
   const [payModal, setPayModal]   = useState(null); // fee record
   const [form, setForm]           = useState(blank);
   const [payForm, setPayForm]     = useState({ amountPaid:'', paymentMethod:'cash' });
+  const [confirming, setConfirming] = useState(false);
+  const [receiptFor, setReceiptFor] = useState(null); // fee id — shows receipt right after collection
 
   const { data: fees, isLoading } = useQuery({
     queryKey: ['fees', statusFilter, page],
@@ -38,8 +42,20 @@ export default function FeeCollection() {
 
   const collectMutation = useMutation({
     mutationFn: ({ id, ...d }) => api.patch(`/receptionist/fees/${id}/collect`, d),
-    onSuccess: () => { toast.success('Payment recorded'); qc.invalidateQueries({ queryKey: ['fees'] }); setPayModal(null); },
-    onError: (e) => toast.error(e.response?.data?.message || 'Error'),
+    onSuccess: (res, { id }) => {
+      toast.success('Payment recorded');
+      qc.invalidateQueries({ queryKey: ['fees'] });
+      setPayModal(null);
+      setConfirming(false);
+      setReceiptFor(id); // show the receipt immediately
+    },
+    onError: (e) => { toast.error(e.response?.data?.message || 'Error'); setConfirming(false); },
+  });
+
+  const { data: receipt, isLoading: loadingReceipt } = useQuery({
+    queryKey: ['receipt', receiptFor],
+    queryFn: () => api.get(`/receptionist/fees/${receiptFor}/receipt`).then((r) => r.data),
+    enabled: !!receiptFor,
   });
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
@@ -95,17 +111,51 @@ export default function FeeCollection() {
         </div>
       </Modal>
 
-      {/* Collect Payment Modal */}
-      <Modal open={!!payModal} onClose={() => setPayModal(null)} title="Collect Payment"
-        footer={<><button className="btn-secondary" onClick={() => setPayModal(null)}>Cancel</button><button className="btn-primary" disabled={collectMutation.isPending} onClick={() => collectMutation.mutate({ id: payModal._id, amountPaid: Number(payForm.amountPaid), paymentMethod: payForm.paymentMethod })}>{collectMutation.isPending ? 'Saving…' : 'Record Payment'}</button></>}>
-        {payModal && <div className="space-y-3">
-          <p className="text-sm text-gray-600">Student: <strong>{payModal.student?.user?.name}</strong> · Balance: <strong>₹{payModal.amount - payModal.amountPaid}</strong></p>
-          <div><label className="label">Amount (₹)</label><input className="input" type="number" value={payForm.amountPaid} onChange={(e) => setPayForm((p) => ({ ...p, amountPaid: e.target.value }))} /></div>
-          <div><label className="label">Payment Method</label>
-            <select className="input" value={payForm.paymentMethod} onChange={(e) => setPayForm((p) => ({ ...p, paymentMethod: e.target.value }))}>
-              {METHODS.map((m) => <option key={m}>{m}</option>)}
-            </select></div>
-        </div>}
+      {/* Collect Payment Modal — review step before the money is recorded */}
+      <Modal open={!!payModal} onClose={() => { setPayModal(null); setConfirming(false); }} title={confirming ? 'Confirm Payment' : 'Collect Payment'}
+        footer={confirming ? (
+          <>
+            <button className="btn-secondary" onClick={() => setConfirming(false)}>Back</button>
+            <button className="btn-primary" disabled={collectMutation.isPending} onClick={() => collectMutation.mutate({ id: payModal._id, amountPaid: Number(payForm.amountPaid), paymentMethod: payForm.paymentMethod })}>
+              {collectMutation.isPending ? 'Recording…' : 'Confirm & Record'}
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="btn-secondary" onClick={() => setPayModal(null)}>Cancel</button>
+            <button className="btn-primary" disabled={!Number(payForm.amountPaid)} onClick={() => setConfirming(true)}>Review</button>
+          </>
+        )}>
+        {payModal && (confirming ? (
+          <div className="space-y-2 text-sm">
+            <p className="text-gray-600">You are about to record:</p>
+            <div className="bg-gray-50 rounded-lg p-4 space-y-1.5">
+              <div className="flex justify-between"><span className="text-gray-500">Student</span><strong>{payModal.student?.user?.name}</strong></div>
+              <div className="flex justify-between"><span className="text-gray-500">Batch</span><span>{payModal.batch?.name}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Amount</span><strong className="text-lg">₹{Number(payForm.amountPaid).toLocaleString('en-IN')}</strong></div>
+              <div className="flex justify-between"><span className="text-gray-500">Method</span><span className="capitalize">{payForm.paymentMethod}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">After payment</span>
+                <Badge label={Number(payForm.amountPaid) >= payModal.amount - payModal.amountPaid ? 'paid' : 'partial'} />
+              </div>
+            </div>
+            <p className="text-xs text-gray-400">A receipt is generated as soon as you confirm.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">Student: <strong>{payModal.student?.user?.name}</strong> · Balance: <strong>₹{payModal.amount - payModal.amountPaid}</strong></p>
+            <div><label className="label">Amount (₹)</label><input className="input" type="number" value={payForm.amountPaid} onChange={(e) => setPayForm((p) => ({ ...p, amountPaid: e.target.value }))} /></div>
+            <div><label className="label">Payment Method</label>
+              <select className="input" value={payForm.paymentMethod} onChange={(e) => setPayForm((p) => ({ ...p, paymentMethod: e.target.value }))}>
+                {METHODS.map((m) => <option key={m}>{m}</option>)}
+              </select></div>
+          </div>
+        ))}
+      </Modal>
+
+      {/* Receipt shown immediately after a successful collection */}
+      <Modal open={!!receiptFor} onClose={() => setReceiptFor(null)} title="Payment Receipt"
+        footer={<><button className="btn-secondary" onClick={() => setReceiptFor(null)}>Close</button><button className="btn-primary" onClick={() => window.print()}>Print</button></>}>
+        {loadingReceipt ? <Spinner size="sm" /> : <ReceiptView receipt={receipt} />}
       </Modal>
     </div>
   );
