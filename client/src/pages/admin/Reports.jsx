@@ -32,7 +32,7 @@ export default function AdminReports() {
       <div className="flex gap-3 mb-6 flex-wrap items-center">
         <div className="flex rounded-lg border border-gray-200 overflow-hidden">
           {['fees','attendance'].map((t) => (
-            <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${tab === t ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>{t}</button>
+            <button key={t} onClick={() => setTab(t)} className={`h-10 px-4 flex items-center text-sm font-medium capitalize transition-colors ${tab === t ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>{t}</button>
           ))}
         </div>
         <select className="input w-32" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
