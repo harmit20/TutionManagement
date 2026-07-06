@@ -2,6 +2,8 @@ const asyncHandler = require('../utils/asyncHandler');
 const FeeRecord = require('../models/FeeRecord');
 const StudentProfile = require('../models/StudentProfile');
 const { audit } = require('../utils/audit');
+const { sendMessage } = require('../services/messaging');
+const templates = require('../services/messaging/templates');
 
 const generateReceiptNumber = () =>
   `RCP-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
@@ -48,6 +50,23 @@ exports.collectPayment = asyncHandler(async (req, res) => {
 
   await record.save();
   audit(req, 'fee.collect', 'FeeRecord', record._id, { amountPaid, paymentMethod, newStatus: record.status });
+
+  // Payment confirmation to the parent (fire-and-forget)
+  StudentProfile.findById(record.student)
+    .populate('user', 'name')
+    .populate('parentUser', 'phone')
+    .then((p) => p && sendMessage({
+      to: p.parentUser?.phone || p.parentPhone,
+      template: 'fee_receipt',
+      body: templates.feeReceipt({
+        studentName: p.user?.name,
+        amount: amountPaid,
+        receiptNumber: record.receiptNumber,
+      }),
+      studentId: p._id,
+    }))
+    .catch((err) => console.error('[FeeReceipt message] failed:', err.message));
+
   res.json(record);
 });
 

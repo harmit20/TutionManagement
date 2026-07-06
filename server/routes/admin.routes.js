@@ -48,6 +48,9 @@ router.get('/reports/attendance', adminCtrl.attendanceReport);
 // Audit log
 router.get('/audit-logs', adminCtrl.listAuditLogs);
 
+// Outbound message log (WhatsApp/SMS alerts)
+router.get('/message-logs', adminCtrl.listMessageLogs);
+
 // Parent → children linking
 router.patch('/parents/:userId/children', permit('USER_UPDATE'), adminCtrl.linkParentChildren);
 

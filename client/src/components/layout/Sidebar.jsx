@@ -3,7 +3,7 @@ import {
   Squares2X2Icon, UsersIcon, CurrencyRupeeIcon, BanknotesIcon, ChartBarIcon,
   UserPlusIcon, DocumentTextIcon, CalendarIcon, BookOpenIcon,
   ClipboardDocumentCheckIcon, FolderOpenIcon, CalendarDaysIcon,
-  ShieldCheckIcon,
+  ShieldCheckIcon, ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
 
@@ -14,6 +14,7 @@ const NAV = {
     { to: '/admin/pricing',  icon: CurrencyRupeeIcon,       label: 'Pricing' },
     { to: '/admin/payouts',  icon: BanknotesIcon,           label: 'Payouts' },
     { to: '/admin/reports',  icon: ChartBarIcon,            label: 'Reports' },
+    { to: '/admin/messages', icon: ChatBubbleLeftRightIcon, label: 'Messages' },
     { to: '/admin/audit',    icon: ShieldCheckIcon,         label: 'Audit Log' },
   ],
   receptionist: [

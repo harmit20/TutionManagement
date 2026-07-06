@@ -3,6 +3,47 @@ const AttendanceRecord = require('../models/AttendanceRecord');
 const TeacherProfile = require('../models/TeacherProfile');
 const StudentProfile = require('../models/StudentProfile');
 const Batch = require('../models/Batch');
+const { sendMessage } = require('../services/messaging');
+const templates = require('../services/messaging/templates');
+
+/**
+ * Alert parents of newly-absent students. Fire-and-forget — marking
+ * attendance must never fail because a message could not be sent.
+ */
+async function alertAbsentees({ record, previousStudents, batchId }) {
+  try {
+    const prevStatus = new Map(
+      (previousStudents || []).map((s) => [s.student.toString(), s.status])
+    );
+    const newlyAbsent = record.students.filter(
+      (s) => s.status === 'absent' && prevStatus.get(s.student.toString()) !== 'absent'
+    );
+    if (!newlyAbsent.length) return;
+
+    const [profiles, batch] = await Promise.all([
+      StudentProfile.find({ _id: { $in: newlyAbsent.map((s) => s.student) } })
+        .populate('user', 'name')
+        .populate('parentUser', 'phone'),
+      Batch.findById(batchId).select('name'),
+    ]);
+
+    for (const p of profiles) {
+      const to = p.parentUser?.phone || p.parentPhone;
+      await sendMessage({
+        to,
+        template: 'absence_alert',
+        body: templates.absenceAlert({
+          studentName: p.user?.name,
+          batchName: batch?.name ?? 'class',
+          onDate: record.date,
+        }),
+        studentId: p._id,
+      });
+    }
+  } catch (err) {
+    console.error('[AbsenceAlert] failed:', err.message);
+  }
+}
 
 // ─── Teacher ──────────────────────────────────────────────────────────────────
 
@@ -17,6 +58,11 @@ exports.markAttendance = asyncHandler(async (req, res) => {
 
   const lectureDate = new Date(date);
   lectureDate.setHours(0, 0, 0, 0);
+
+  // Remember the previous marks so corrections don't re-alert parents
+  const previous = await AttendanceRecord.findOne({ batch: batchId, date: lectureDate })
+    .select('students')
+    .lean();
 
   // Upsert: allow teachers to correct a session they already marked
   const record = await AttendanceRecord.findOneAndUpdate(
@@ -33,6 +79,8 @@ exports.markAttendance = asyncHandler(async (req, res) => {
     },
     { upsert: true, new: true, runValidators: true }
   );
+
+  alertAbsentees({ record, previousStudents: previous?.students, batchId });
 
   res.status(201).json(record);
 });

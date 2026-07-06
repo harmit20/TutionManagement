@@ -13,4 +13,5 @@ module.exports = {
   StudyMaterial: require('./StudyMaterial'),
   FCMToken: require('./FCMToken'),
   AuditLog: require('./AuditLog'),
+  MessageLog: require('./MessageLog'),
 };

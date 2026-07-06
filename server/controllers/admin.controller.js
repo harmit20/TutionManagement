@@ -9,6 +9,7 @@ const PricingRule = require('../models/PricingRule');
 const PaymentLedger = require('../models/PaymentLedger');
 const Classroom = require('../models/Classroom');
 const AuditLog = require('../models/AuditLog');
+const MessageLog = require('../models/MessageLog');
 const { audit } = require('../utils/audit');
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
@@ -212,6 +213,26 @@ exports.listAuditLogs = asyncHandler(async (req, res) => {
       .skip((page - 1) * limit)
       .limit(Number(limit)),
     AuditLog.countDocuments(filter),
+  ]);
+
+  res.json({ logs, total, page: Number(page), pages: Math.ceil(total / limit) });
+});
+
+// ─── Message Log ──────────────────────────────────────────────────────────────
+
+exports.listMessageLogs = asyncHandler(async (req, res) => {
+  const { template, status, page = 1, limit = 25 } = req.query;
+  const filter = {};
+  if (template) filter.template = template;
+  if (status) filter.status = status;
+
+  const [logs, total] = await Promise.all([
+    MessageLog.find(filter)
+      .populate({ path: 'student', select: 'user', populate: { path: 'user', select: 'name' } })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit)),
+    MessageLog.countDocuments(filter),
   ]);
 
   res.json({ logs, total, page: Number(page), pages: Math.ceil(total / limit) });
