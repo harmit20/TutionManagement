@@ -5,6 +5,7 @@ const adminCtrl = require('../controllers/admin.controller');
 const batchCtrl = require('../controllers/batch.controller');
 const payoutCtrl = require('../controllers/payout.controller');
 const authCtrl = require('../controllers/auth.controller');
+const studentSummaryCtrl = require('../controllers/studentSummary.controller');
 
 // All admin routes require authentication + admin role
 router.use(protect, permit('USER_READ_ALL'));
@@ -46,5 +47,9 @@ router.get('/reports/attendance', adminCtrl.attendanceReport);
 
 // Audit log
 router.get('/audit-logs', adminCtrl.listAuditLogs);
+
+// Student search + full profile summary
+router.get('/students/search', studentSummaryCtrl.searchStudents);
+router.get('/students/:id/summary', studentSummaryCtrl.getStudentSummary);
 
 module.exports = router;

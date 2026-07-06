@@ -5,6 +5,7 @@ const enrollCtrl = require('../controllers/enrollment.controller');
 const feeCtrl = require('../controllers/fee.controller');
 const batchCtrl = require('../controllers/batch.controller');
 const timetableCtrl = require('../controllers/timetable.controller');
+const studentSummaryCtrl = require('../controllers/studentSummary.controller');
 
 router.use(protect);
 
@@ -12,6 +13,10 @@ router.use(protect);
 router.get('/batches', batchCtrl.listBatches);
 router.get('/batches/:id', batchCtrl.getBatch);
 router.get('/batches/:id/students', batchCtrl.getBatchStudents);
+
+// Student search + full profile summary
+router.get('/students/search', permit('ENROLLMENT_MANAGE'), studentSummaryCtrl.searchStudents);
+router.get('/students/:id/summary', permit('ENROLLMENT_MANAGE'), studentSummaryCtrl.getStudentSummary);
 
 // Enrollments
 router.get('/students', permit('ENROLLMENT_MANAGE'), enrollCtrl.listStudentsForEnrollment);

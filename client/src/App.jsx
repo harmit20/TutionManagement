@@ -13,6 +13,9 @@ import DynamicPricing   from './pages/admin/DynamicPricing';
 import AdminReports     from './pages/admin/Reports';
 import AuditLog         from './pages/admin/AuditLog';
 
+// Shared (admin + receptionist)
+import StudentProfile   from './pages/shared/StudentProfile';
+
 // Receptionist
 import Enrollments  from './pages/receptionist/Enrollments';
 import FeeCollection from './pages/receptionist/FeeCollection';
@@ -59,12 +62,14 @@ function App() {
         <Route path="admin/pricing" element={<ProtectedRoute allowedRoles={['admin']}><DynamicPricing /></ProtectedRoute>} />
         <Route path="admin/reports" element={<ProtectedRoute allowedRoles={['admin']}><AdminReports /></ProtectedRoute>} />
         <Route path="admin/audit"   element={<ProtectedRoute allowedRoles={['admin']}><AuditLog /></ProtectedRoute>} />
+        <Route path="admin/students/:id" element={<ProtectedRoute allowedRoles={['admin']}><StudentProfile /></ProtectedRoute>} />
 
         {/* Receptionist */}
         <Route path="receptionist/enrollments" element={<ProtectedRoute allowedRoles={['admin','receptionist']}><Enrollments /></ProtectedRoute>} />
         <Route path="receptionist/fees"        element={<ProtectedRoute allowedRoles={['admin','receptionist']}><FeeCollection /></ProtectedRoute>} />
         <Route path="receptionist/receipts"    element={<ProtectedRoute allowedRoles={['admin','receptionist']}><Receipts /></ProtectedRoute>} />
         <Route path="receptionist/timetable"   element={<ProtectedRoute allowedRoles={['admin','receptionist']}><Timetable /></ProtectedRoute>} />
+        <Route path="receptionist/students/:id" element={<ProtectedRoute allowedRoles={['admin','receptionist']}><StudentProfile /></ProtectedRoute>} />
 
         {/* Teacher */}
         <Route path="teacher/batches"    element={<ProtectedRoute allowedRoles={['teacher']}><MyBatches /></ProtectedRoute>} />
