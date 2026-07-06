@@ -7,6 +7,7 @@ import Badge from '../../components/shared/Badge';
 import DataTable from '../../components/shared/DataTable';
 import EmptyState from '../../components/shared/EmptyState';
 import FilterBar, { TabGroup } from '../../components/shared/FilterBar';
+import MonthStepper from '../../components/shared/MonthStepper';
 
 const now = new Date();
 
@@ -34,10 +35,7 @@ export default function AdminReports() {
       {/* Filters */}
       <FilterBar>
         <TabGroup options={['fees','attendance']} value={tab} onChange={setTab} />
-        <select className="input w-32" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-          {Array.from({length:12},(_,i)=><option key={i+1} value={i+1}>{new Date(2000,i).toLocaleString('en',{month:'short'})}</option>)}
-        </select>
-        <input className="input w-28" type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} />
+        <MonthStepper month={month} year={year} onChange={({ month: m, year: y }) => { setMonth(m); setYear(y); }} />
       </FilterBar>
 
       {/* Fee Report */}
