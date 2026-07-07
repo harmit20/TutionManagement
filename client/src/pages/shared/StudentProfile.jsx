@@ -7,6 +7,7 @@ import Spinner from '../../components/shared/Spinner';
 import Badge from '../../components/shared/Badge';
 import DataTable from '../../components/shared/DataTable';
 import EmptyState from '../../components/shared/EmptyState';
+import PayNowButton from '../../components/shared/PayNowButton';
 
 function StatTile({ label, value, accent = 'text-gray-900' }) {
   return (
@@ -97,6 +98,12 @@ export default function StudentProfile() {
           { header: 'Paid', render: (f) => `₹${f.amountPaid || 0}`, className: 'text-gray-600' },
           { header: 'Due', render: (f) => format(new Date(f.dueDate), 'dd MMM yyyy'), className: 'text-gray-600' },
           { header: 'Status', render: (f) => <Badge label={f.status} /> },
+          ...(user?.role === 'parent' ? [{
+            header: '',
+            render: (f) => f.status !== 'paid' && f.status !== 'waived' && (
+              <PayNowButton feeId={f._id} basePath="/parent" />
+            ),
+          }] : []),
         ]}
       />
 

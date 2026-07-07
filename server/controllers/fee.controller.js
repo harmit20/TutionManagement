@@ -4,9 +4,7 @@ const StudentProfile = require('../models/StudentProfile');
 const { audit } = require('../utils/audit');
 const { sendMessage } = require('../services/messaging');
 const templates = require('../services/messaging/templates');
-
-const generateReceiptNumber = () =>
-  `RCP-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+const { generateReceiptNumber } = require('../utils/receiptNumber');
 
 // ─── Admin / Receptionist ─────────────────────────────────────────────────────
 

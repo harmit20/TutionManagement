@@ -14,4 +14,5 @@ module.exports = {
   FCMToken: require('./FCMToken'),
   AuditLog: require('./AuditLog'),
   MessageLog: require('./MessageLog'),
+  PaymentTransaction: require('./PaymentTransaction'),
 };

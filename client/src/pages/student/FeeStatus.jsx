@@ -5,6 +5,7 @@ import PageHeader from '../../components/shared/PageHeader';
 import Badge from '../../components/shared/Badge';
 import Spinner from '../../components/shared/Spinner';
 import EmptyState from '../../components/shared/EmptyState';
+import PayNowButton from '../../components/shared/PayNowButton';
 
 export default function FeeStatus() {
   const { data: fees, isLoading } = useQuery({
@@ -55,6 +56,11 @@ export default function FeeStatus() {
               </div>
               {f.receiptNumber && (
                 <p className="text-xs text-gray-400 mt-2 font-mono">Receipt: {f.receiptNumber}</p>
+              )}
+              {f.status !== 'paid' && f.status !== 'waived' && (
+                <div className="mt-3 flex justify-end">
+                  <PayNowButton feeId={f._id} basePath="/student" />
+                </div>
               )}
             </div>
           ))}

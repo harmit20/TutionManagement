@@ -21,6 +21,11 @@ router.get('/profile', async (req, res) => {
 // Fees (own)
 router.get('/fees', feeCtrl.getMyFees);
 
+// Online fee payment (own)
+const paymentCtrl = require('../controllers/payment.controller');
+router.post('/fees/:id/pay/initiate', paymentCtrl.initiatePayment);
+router.post('/fees/:id/pay/confirm', paymentCtrl.confirmPayment);
+
 // Attendance (own)
 router.get('/attendance', attendanceCtrl.getMyAttendance);
 
