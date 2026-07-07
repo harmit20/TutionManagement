@@ -43,4 +43,10 @@ router.get('/timetable/conflict-check', timetableCtrl.checkConflict);
 router.post('/timetable/batches/:batchId/slots', permit('TIMETABLE_MANAGE'), timetableCtrl.addScheduleSlot);
 router.delete('/timetable/batches/:batchId/slots/:slotIndex', permit('TIMETABLE_MANAGE'), timetableCtrl.removeScheduleSlot);
 
+// Date-specific cancellations & substitutions
+router.get('/timetable/exceptions', timetableCtrl.listExceptions);
+router.post('/timetable/exceptions', permit('TIMETABLE_MANAGE'), timetableCtrl.createException);
+router.delete('/timetable/exceptions/:id', permit('TIMETABLE_MANAGE'), timetableCtrl.deleteException);
+router.get('/teachers', permit('TIMETABLE_MANAGE'), timetableCtrl.listTeachers);
+
 module.exports = router;

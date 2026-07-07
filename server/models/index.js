@@ -16,4 +16,5 @@ module.exports = {
   MessageLog: require('./MessageLog'),
   PaymentTransaction: require('./PaymentTransaction'),
   Enquiry: require('./Enquiry'),
+  ScheduleException: require('./ScheduleException'),
 };

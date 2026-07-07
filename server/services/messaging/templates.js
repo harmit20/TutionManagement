@@ -14,4 +14,11 @@ module.exports = {
 
   feeReceipt: ({ studentName, amount, receiptNumber }) =>
     `TuitionApp: Payment of ${inr(amount)} received for ${studentName}. Receipt: ${receiptNumber}. Thank you!`,
+
+  classCancelled: ({ batchName, onDate, startTime, reason }) =>
+    `TuitionApp: ${batchName} class on ${date(onDate)} at ${startTime} is CANCELLED.` +
+    (reason ? ` Reason: ${reason}.` : ''),
+
+  classSubstituted: ({ batchName, onDate, startTime, teacherName }) =>
+    `TuitionApp: ${batchName} class on ${date(onDate)} at ${startTime} will be taken by ${teacherName}.`,
 };
