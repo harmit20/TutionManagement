@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 const bcrypt = require('bcryptjs');
 
 const ROLES = ['admin', 'receptionist', 'teacher', 'student', 'parent'];
@@ -51,5 +52,7 @@ userSchema.methods.comparePassword = function (candidate) {
 
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
+
+userSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('User', userSchema);

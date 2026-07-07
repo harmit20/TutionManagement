@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const ENQUIRY_STATUS = ['new', 'follow_up', 'demo_scheduled', 'converted', 'lost'];
 const ENQUIRY_SOURCE = ['walk_in', 'phone', 'referral', 'online', 'other'];
@@ -31,6 +32,8 @@ const enquirySchema = new mongoose.Schema(
 
 enquirySchema.index({ status: 1, nextFollowUpAt: 1 });
 enquirySchema.index({ createdAt: -1 });
+
+enquirySchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('Enquiry', enquirySchema);
 module.exports.ENQUIRY_STATUS = ENQUIRY_STATUS;

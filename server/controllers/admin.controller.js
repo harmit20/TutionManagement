@@ -199,6 +199,39 @@ exports.updateClassroom = asyncHandler(async (req, res) => {
   res.json(classroom);
 });
 
+// ─── Centres (branches) ───────────────────────────────────────────────────────
+
+const Centre = require('../models/Centre');
+
+exports.listCentres = asyncHandler(async (req, res) => {
+  const centres = await Centre.find().sort({ name: 1 });
+  res.json(centres);
+});
+
+exports.createCentre = asyncHandler(async (req, res) => {
+  const { name, code, address, phone } = req.body;
+  if (!name || !code) return res.status(400).json({ message: 'name and code are required' });
+
+  const existing = await Centre.findOne({ code: code.toUpperCase() });
+  if (existing) return res.status(409).json({ message: 'A centre with this code already exists' });
+
+  const centre = await Centre.create({ name, code, address, phone });
+  audit(req, 'centre.create', 'Centre', centre._id, { name, code });
+  res.status(201).json(centre);
+});
+
+exports.updateCentre = asyncHandler(async (req, res) => {
+  const { name, address, phone, isActive } = req.body;
+  const centre = await Centre.findByIdAndUpdate(
+    req.params.id,
+    { name, address, phone, isActive },
+    { new: true, runValidators: true }
+  );
+  if (!centre) return res.status(404).json({ message: 'Centre not found' });
+  audit(req, 'centre.update', 'Centre', centre._id, { name, isActive });
+  res.json(centre);
+});
+
 // ─── Parent linking ───────────────────────────────────────────────────────────
 
 exports.linkParentChildren = asyncHandler(async (req, res) => {

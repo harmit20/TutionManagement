@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const announcementSchema = new mongoose.Schema(
   {
@@ -13,5 +14,7 @@ const announcementSchema = new mongoose.Schema(
 
 announcementSchema.index({ batch: 1, createdAt: -1 });
 announcementSchema.index({ createdAt: -1 });
+
+announcementSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('Announcement', announcementSchema);

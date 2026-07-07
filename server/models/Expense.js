@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const EXPENSE_CATEGORIES = ['rent', 'utilities', 'salary', 'marketing', 'supplies', 'maintenance', 'other'];
 
@@ -16,6 +17,8 @@ const expenseSchema = new mongoose.Schema(
 
 expenseSchema.index({ date: -1 });
 expenseSchema.index({ category: 1, date: -1 });
+
+expenseSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('Expense', expenseSchema);
 module.exports.EXPENSE_CATEGORIES = EXPENSE_CATEGORIES;

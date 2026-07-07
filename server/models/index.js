@@ -20,4 +20,5 @@ module.exports = {
   Announcement: require('./Announcement'),
   Expense: require('./Expense'),
   AttendanceSession: require('./AttendanceSession'),
+  Centre: require('./Centre'),
 };

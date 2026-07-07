@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const FILE_TYPES = ['pdf', 'image', 'video', 'doc', 'link', 'other'];
 
@@ -60,5 +61,7 @@ const studyMaterialSchema = new mongoose.Schema(
 
 studyMaterialSchema.index({ batch: 1 });
 studyMaterialSchema.index({ uploadedBy: 1 });
+
+studyMaterialSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('StudyMaterial', studyMaterialSchema);

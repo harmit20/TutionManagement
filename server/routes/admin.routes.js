@@ -27,6 +27,11 @@ router.post('/batches', batchCtrl.createBatch);
 router.get('/batches/:id', batchCtrl.getBatch);
 router.patch('/batches/:id', batchCtrl.updateBatch);
 
+// Centres (branches)
+router.get('/centres', adminCtrl.listCentres);
+router.post('/centres', adminCtrl.createCentre);
+router.patch('/centres/:id', adminCtrl.updateCentre);
+
 // Classrooms
 router.get('/classrooms', adminCtrl.listClassrooms);
 router.post('/classrooms', adminCtrl.createClassroom);

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const LEDGER_STATUS = ['pending', 'paid', 'on_hold'];
 
@@ -58,5 +59,7 @@ const paymentLedgerSchema = new mongoose.Schema(
 
 paymentLedgerSchema.index({ teacher: 1, month: 1, year: 1 }, { unique: true });
 paymentLedgerSchema.index({ status: 1 });
+
+paymentLedgerSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('PaymentLedger', paymentLedgerSchema);

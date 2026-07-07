@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const testSchema = new mongoose.Schema(
   {
@@ -54,5 +55,7 @@ const testSchema = new mongoose.Schema(
 // Test reminder cron queries by scheduledDate
 testSchema.index({ batch: 1, scheduledDate: 1 });
 testSchema.index({ scheduledDate: 1 });
+
+testSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('Test', testSchema);
