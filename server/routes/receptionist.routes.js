@@ -23,6 +23,7 @@ router.patch('/enquiries/:id', permit('ENROLLMENT_MANAGE'), enquiryCtrl.updateEn
 // Student search + full profile summary
 router.get('/students/search', permit('ENROLLMENT_MANAGE'), studentSummaryCtrl.searchStudents);
 router.get('/students/:id/summary', permit('ENROLLMENT_MANAGE'), studentSummaryCtrl.getStudentSummary);
+router.get('/students/:id/report-card', permit('ENROLLMENT_MANAGE'), studentSummaryCtrl.getReportCard);
 
 // Enrollments
 router.get('/students', permit('ENROLLMENT_MANAGE'), enrollCtrl.listStudentsForEnrollment);

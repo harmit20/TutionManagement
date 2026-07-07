@@ -15,7 +15,7 @@ export default function AppShell() {
       <Sidebar />
       <main className="flex-1 min-w-0 pb-20 md:pb-0">
         {showSearch && (
-          <div className="border-b border-gray-100 bg-white px-4 py-3 md:px-6 lg:px-8">
+          <div className="border-b border-gray-100 bg-white px-4 py-3 md:px-6 lg:px-8 print:hidden">
             <GlobalSearch />
           </div>
         )}

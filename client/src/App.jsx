@@ -16,6 +16,7 @@ import Messages         from './pages/admin/Messages';
 
 // Shared (admin + receptionist)
 import StudentProfile   from './pages/shared/StudentProfile';
+import ReportCard       from './pages/shared/ReportCard';
 
 // Parent
 import MyChildren       from './pages/parent/MyChildren';
@@ -69,6 +70,7 @@ function App() {
         <Route path="admin/reports" element={<ProtectedRoute allowedRoles={['admin']}><AdminReports /></ProtectedRoute>} />
         <Route path="admin/audit"   element={<ProtectedRoute allowedRoles={['admin']}><AuditLog /></ProtectedRoute>} />
         <Route path="admin/students/:id" element={<ProtectedRoute allowedRoles={['admin']}><StudentProfile /></ProtectedRoute>} />
+        <Route path="admin/students/:id/report-card" element={<ProtectedRoute allowedRoles={['admin']}><ReportCard /></ProtectedRoute>} />
         <Route path="admin/messages" element={<ProtectedRoute allowedRoles={['admin']}><Messages /></ProtectedRoute>} />
 
         {/* Receptionist */}
@@ -78,6 +80,7 @@ function App() {
         <Route path="receptionist/receipts"    element={<ProtectedRoute allowedRoles={['admin','receptionist']}><Receipts /></ProtectedRoute>} />
         <Route path="receptionist/timetable"   element={<ProtectedRoute allowedRoles={['admin','receptionist']}><Timetable /></ProtectedRoute>} />
         <Route path="receptionist/students/:id" element={<ProtectedRoute allowedRoles={['admin','receptionist']}><StudentProfile /></ProtectedRoute>} />
+        <Route path="receptionist/students/:id/report-card" element={<ProtectedRoute allowedRoles={['admin','receptionist']}><ReportCard /></ProtectedRoute>} />
 
         {/* Teacher */}
         <Route path="teacher/batches"    element={<ProtectedRoute allowedRoles={['teacher']}><MyBatches /></ProtectedRoute>} />
@@ -87,6 +90,7 @@ function App() {
         {/* Parent */}
         <Route path="parent"                    element={<ProtectedRoute allowedRoles={['parent']}><MyChildren /></ProtectedRoute>} />
         <Route path="parent/children/:id"       element={<ProtectedRoute allowedRoles={['parent']}><StudentProfile /></ProtectedRoute>} />
+        <Route path="parent/children/:id/report-card" element={<ProtectedRoute allowedRoles={['parent']}><ReportCard /></ProtectedRoute>} />
 
         {/* Student */}
         <Route path="student/fees"       element={<ProtectedRoute allowedRoles={['student']}><FeeStatus /></ProtectedRoute>} />

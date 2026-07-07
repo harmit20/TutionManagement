@@ -10,6 +10,7 @@ const paymentCtrl = require('../controllers/payment.controller');
 
 router.get('/children', parentCtrl.listChildren);
 router.get('/children/:id/summary', parentCtrl.requireOwnChild, studentSummaryCtrl.getStudentSummary);
+router.get('/children/:id/report-card', parentCtrl.requireOwnChild, studentSummaryCtrl.getReportCard);
 
 // Pay a child's fee online (ownership enforced inside the controller)
 router.post('/fees/:id/pay/initiate', paymentCtrl.initiatePayment);

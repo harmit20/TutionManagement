@@ -39,7 +39,7 @@ export default function BottomNav() {
   const links = NAV[user?.role] ?? [];
 
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 z-40 safe-area-inset-bottom">
+    <nav className="md:hidden print:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 z-40 safe-area-inset-bottom">
       <div className="flex">
         {links.map(({ to, icon: Icon, label, end }) => (
           <NavLink

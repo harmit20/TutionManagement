@@ -45,7 +45,7 @@ export default function Sidebar() {
   const links = NAV[user?.role] ?? [];
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-100 min-h-screen">
+    <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-100 min-h-screen print:hidden">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-gray-100">
         <span className="text-lg font-bold text-indigo-600">TuitionApp</span>

@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import api from '../../services/api';
@@ -56,8 +56,11 @@ export default function StudentProfile() {
               </p>
             )}
           </div>
-          <div className="text-right text-xs text-gray-400">
-            Joined {profile.joinedAt ? format(new Date(profile.joinedAt), 'dd MMM yyyy') : '—'}
+          <div className="flex flex-col items-end gap-2">
+            <span className="text-xs text-gray-400">
+              Joined {profile.joinedAt ? format(new Date(profile.joinedAt), 'dd MMM yyyy') : '—'}
+            </span>
+            <Link to="report-card" className="btn-secondary text-xs px-3 py-1.5">Report Card</Link>
           </div>
         </div>
         {profile.batches?.length > 0 && (

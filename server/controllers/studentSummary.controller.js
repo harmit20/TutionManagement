@@ -4,6 +4,7 @@ const StudentProfile = require('../models/StudentProfile');
 const FeeRecord = require('../models/FeeRecord');
 const AttendanceRecord = require('../models/AttendanceRecord');
 const TestResult = require('../models/TestResult');
+const Test = require('../models/Test');
 
 /**
  * Quick lookup for the global search box: matches student name, email,
@@ -63,7 +64,7 @@ exports.getStudentSummary = asyncHandler(async (req, res) => {
       .sort({ date: -1 })
       .limit(60),
     TestResult.find({ student: profile._id })
-      .populate({ path: 'test', select: 'title subject totalMarks scheduledAt', populate: { path: 'batch', select: 'name' } })
+      .populate({ path: 'test', select: 'title subject totalMarks scheduledDate', populate: { path: 'batch', select: 'name' } })
       .sort({ createdAt: -1 })
       .limit(20),
   ]);
@@ -105,5 +106,74 @@ exports.getStudentSummary = asyncHandler(async (req, res) => {
       status: r.students[0]?.status,
     })),
     testResults: results,
+  });
+});
+
+/**
+ * Printable report card for a date range: every test in the period with
+ * the student's marks, the batch average, and their rank in the batch.
+ */
+exports.getReportCard = asyncHandler(async (req, res) => {
+  const { from, to } = req.query;
+  const profile = await StudentProfile.findById(req.params.id)
+    .populate('user', 'name')
+    .populate('batches', 'name');
+  if (!profile) return res.status(404).json({ message: 'Student not found' });
+
+  const range = {};
+  if (from) range.$gte = new Date(from);
+  if (to) range.$lte = new Date(`${to}T23:59:59`);
+
+  const results = await TestResult.find({ student: profile._id })
+    .populate({
+      path: 'test',
+      select: 'title subject totalMarks passingMarks scheduledDate',
+      match: Object.keys(range).length ? { scheduledDate: range } : {},
+      populate: { path: 'batch', select: 'name' },
+    })
+    .sort({ createdAt: 1 });
+
+  const inRange = results.filter((r) => r.test);
+
+  // Batch average + rank per test
+  const rows = await Promise.all(inRange.map(async (r) => {
+    const all = await TestResult.find({ test: r.test._id }).select('marksObtained').lean();
+    const avg = all.length ? all.reduce((s, x) => s + x.marksObtained, 0) / all.length : null;
+    const rank = all.filter((x) => x.marksObtained > r.marksObtained).length + 1;
+    return {
+      test: r.test.title,
+      subject: r.test.subject,
+      batch: r.test.batch?.name,
+      date: r.test.scheduledDate,
+      marks: r.marksObtained,
+      totalMarks: r.test.totalMarks,
+      grade: r.grade,
+      remarks: r.remarks,
+      batchAverage: avg == null ? null : Math.round(avg * 10) / 10,
+      rank,
+      outOf: all.length,
+    };
+  }));
+
+  // Attendance over the same period
+  const attFilter = { 'students.student': profile._id };
+  if (Object.keys(range).length) attFilter.date = range;
+  const attendance = await AttendanceRecord.find(attFilter).select('students.$').lean();
+  const present = attendance.filter((r) => r.students[0]?.status === 'present').length;
+
+  res.json({
+    student: {
+      name: profile.user?.name,
+      enrollmentNumber: profile.enrollmentNumber,
+      classLevel: profile.classLevel,
+      batches: profile.batches.map((b) => b.name),
+    },
+    period: { from: from || null, to: to || null },
+    tests: rows,
+    attendance: {
+      total: attendance.length,
+      present,
+      rate: attendance.length ? Math.round((present / attendance.length) * 100) : null,
+    },
   });
 });

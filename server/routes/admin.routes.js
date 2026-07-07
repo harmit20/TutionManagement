@@ -57,5 +57,6 @@ router.patch('/parents/:userId/children', permit('USER_UPDATE'), adminCtrl.linkP
 // Student search + full profile summary
 router.get('/students/search', studentSummaryCtrl.searchStudents);
 router.get('/students/:id/summary', studentSummaryCtrl.getStudentSummary);
+router.get('/students/:id/report-card', studentSummaryCtrl.getReportCard);
 
 module.exports = router;
