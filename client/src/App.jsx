@@ -13,6 +13,7 @@ import DynamicPricing   from './pages/admin/DynamicPricing';
 import AdminReports     from './pages/admin/Reports';
 import AuditLog         from './pages/admin/AuditLog';
 import Messages         from './pages/admin/Messages';
+import Expenses         from './pages/admin/Expenses';
 
 // Shared (admin + receptionist)
 import StudentProfile   from './pages/shared/StudentProfile';
@@ -73,6 +74,7 @@ function App() {
         <Route path="admin/students/:id" element={<ProtectedRoute allowedRoles={['admin']}><StudentProfile /></ProtectedRoute>} />
         <Route path="admin/students/:id/report-card" element={<ProtectedRoute allowedRoles={['admin']}><ReportCard /></ProtectedRoute>} />
         <Route path="admin/messages" element={<ProtectedRoute allowedRoles={['admin']}><Messages /></ProtectedRoute>} />
+        <Route path="admin/expenses" element={<ProtectedRoute allowedRoles={['admin']}><Expenses /></ProtectedRoute>} />
 
         {/* Receptionist */}
         <Route path="receptionist/enrollments" element={<ProtectedRoute allowedRoles={['admin','receptionist']}><Enrollments /></ProtectedRoute>} />

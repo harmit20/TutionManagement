@@ -10,6 +10,7 @@ const PaymentLedger = require('../models/PaymentLedger');
 const Classroom = require('../models/Classroom');
 const AuditLog = require('../models/AuditLog');
 const MessageLog = require('../models/MessageLog');
+const Expense = require('../models/Expense');
 const { audit } = require('../utils/audit');
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
@@ -25,6 +26,8 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     totalBatches,
     pendingFees,
     feeAgg,
+    expenseAgg,
+    payoutAgg,
     recentEnrollments,
   ] = await Promise.all([
     User.countDocuments({ role: 'student', isActive: true }),
@@ -35,18 +38,33 @@ exports.getDashboard = asyncHandler(async (req, res) => {
       { $match: { status: 'paid', paidDate: { $gte: monthStart, $lte: monthEnd } } },
       { $group: { _id: null, total: { $sum: '$amountPaid' } } },
     ]),
+    Expense.aggregate([
+      { $match: { isDeleted: { $ne: true }, date: { $gte: monthStart, $lte: monthEnd } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]),
+    PaymentLedger.aggregate([
+      { $match: { status: 'paid', paidOn: { $gte: monthStart, $lte: monthEnd } } },
+      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+    ]),
     StudentProfile.find()
       .sort({ createdAt: -1 })
       .limit(5)
       .populate('user', 'name email'),
   ]);
 
+  const feeCollectedThisMonth = feeAgg[0]?.total ?? 0;
+  const expensesThisMonth = expenseAgg[0]?.total ?? 0;
+  const payoutsPaidThisMonth = payoutAgg[0]?.total ?? 0;
+
   res.json({
     totalStudents,
     totalTeachers,
     totalBatches,
     pendingFees,
-    feeCollectedThisMonth: feeAgg[0]?.total ?? 0,
+    feeCollectedThisMonth,
+    expensesThisMonth,
+    payoutsPaidThisMonth,
+    netThisMonth: feeCollectedThisMonth - expensesThisMonth - payoutsPaidThisMonth,
     recentEnrollments,
   });
 });

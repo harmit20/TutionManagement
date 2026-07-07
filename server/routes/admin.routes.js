@@ -45,6 +45,12 @@ router.patch('/payouts/:id/pay', permit('PAYOUT_MANAGE'), payoutCtrl.markPaid);
 router.get('/reports/fees', adminCtrl.feeReport);
 router.get('/reports/attendance', adminCtrl.attendanceReport);
 
+// Expenses
+const expenseCtrl = require('../controllers/expense.controller');
+router.get('/expenses', permit('PAYOUT_MANAGE'), expenseCtrl.listExpenses);
+router.post('/expenses', permit('PAYOUT_MANAGE'), expenseCtrl.createExpense);
+router.delete('/expenses/:id', permit('PAYOUT_MANAGE'), expenseCtrl.deleteExpense);
+
 // Announcements (any batch or centre-wide)
 const announcementCtrl = require('../controllers/announcement.controller');
 router.get('/announcements', announcementCtrl.listAnnouncements);
