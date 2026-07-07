@@ -17,4 +17,5 @@ module.exports = {
   PaymentTransaction: require('./PaymentTransaction'),
   Enquiry: require('./Enquiry'),
   ScheduleException: require('./ScheduleException'),
+  Announcement: require('./Announcement'),
 };

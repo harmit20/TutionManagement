@@ -46,6 +46,11 @@ router.get('/tests', testCtrl.getMyBatchTests);
 router.post('/tests/:testId/results', testCtrl.enterResults);
 router.get('/tests/:testId/results', testCtrl.listResults);
 
+// Announcements (own batches)
+const announcementCtrl = require('../controllers/announcement.controller');
+router.get('/announcements', announcementCtrl.listAnnouncements);
+router.post('/announcements', announcementCtrl.createAnnouncement);
+
 // Study materials
 router.get('/materials', materialCtrl.getMyBatchMaterials);
 router.post('/materials', materialCtrl.uploadMiddleware, materialCtrl.uploadMaterial);

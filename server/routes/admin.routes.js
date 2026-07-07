@@ -45,6 +45,11 @@ router.patch('/payouts/:id/pay', permit('PAYOUT_MANAGE'), payoutCtrl.markPaid);
 router.get('/reports/fees', adminCtrl.feeReport);
 router.get('/reports/attendance', adminCtrl.attendanceReport);
 
+// Announcements (any batch or centre-wide)
+const announcementCtrl = require('../controllers/announcement.controller');
+router.get('/announcements', announcementCtrl.listAnnouncements);
+router.post('/announcements', announcementCtrl.createAnnouncement);
+
 // Audit log
 router.get('/audit-logs', adminCtrl.listAuditLogs);
 

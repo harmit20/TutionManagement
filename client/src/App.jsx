@@ -38,6 +38,7 @@ import FeeStatus      from './pages/student/FeeStatus';
 import TestSchedule   from './pages/student/TestSchedule';
 import MyAttendance   from './pages/student/MyAttendance';
 import StudyMaterials from './pages/student/StudyMaterials';
+import Announcements  from './pages/student/Announcements';
 
 const ROLE_HOME = {
   admin: '/admin',
@@ -97,6 +98,7 @@ function App() {
         <Route path="student/tests"      element={<ProtectedRoute allowedRoles={['student']}><TestSchedule /></ProtectedRoute>} />
         <Route path="student/attendance" element={<ProtectedRoute allowedRoles={['student']}><MyAttendance /></ProtectedRoute>} />
         <Route path="student/materials"  element={<ProtectedRoute allowedRoles={['student']}><StudyMaterials /></ProtectedRoute>} />
+        <Route path="student/announcements" element={<ProtectedRoute allowedRoles={['student']}><Announcements /></ProtectedRoute>} />
 
       </Route>
 

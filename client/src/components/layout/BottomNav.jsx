@@ -3,6 +3,7 @@ import {
   Squares2X2Icon, UsersIcon, CurrencyRupeeIcon, BanknotesIcon,
   UserPlusIcon, DocumentTextIcon, CalendarIcon, BookOpenIcon,
   ClipboardDocumentCheckIcon, FolderOpenIcon, CalendarDaysIcon,
+  ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
 
@@ -28,6 +29,7 @@ const NAV = {
     { to: '/student/tests',      icon: DocumentTextIcon,  label: 'Tests' },
     { to: '/student/attendance', icon: CalendarDaysIcon,  label: 'Attend.' },
     { to: '/student/materials',  icon: FolderOpenIcon,    label: 'Materials' },
+    { to: '/student/announcements', icon: ChatBubbleLeftRightIcon, label: 'News' },
   ],
   parent: [
     { to: '/parent', icon: UsersIcon, label: 'My Children', end: true },

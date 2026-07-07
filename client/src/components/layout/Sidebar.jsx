@@ -34,6 +34,7 @@ const NAV = {
     { to: '/student/tests',      icon: DocumentTextIcon,  label: 'Tests' },
     { to: '/student/attendance', icon: CalendarDaysIcon,  label: 'Attendance' },
     { to: '/student/materials',  icon: FolderOpenIcon,    label: 'Materials' },
+    { to: '/student/announcements', icon: ChatBubbleLeftRightIcon, label: 'Announcements' },
   ],
   parent: [
     { to: '/parent', icon: UsersIcon, label: 'My Children', end: true },

@@ -36,6 +36,10 @@ router.get('/results', testCtrl.getMyResults);
 // Study Materials (own batches)
 router.get('/materials', materialCtrl.getMyMaterials);
 
+// Announcements (own batches + centre-wide)
+const announcementCtrl = require('../controllers/announcement.controller');
+router.get('/announcements', announcementCtrl.listAnnouncements);
+
 // Timetable (own batches)
 router.get('/timetable', async (req, res) => {
   const StudentProfile = require('../models/StudentProfile');
