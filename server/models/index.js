@@ -15,4 +15,5 @@ module.exports = {
   AuditLog: require('./AuditLog'),
   MessageLog: require('./MessageLog'),
   PaymentTransaction: require('./PaymentTransaction'),
+  Enquiry: require('./Enquiry'),
 };

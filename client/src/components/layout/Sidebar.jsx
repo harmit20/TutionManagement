@@ -18,6 +18,7 @@ const NAV = {
     { to: '/admin/audit',    icon: ShieldCheckIcon,         label: 'Audit Log' },
   ],
   receptionist: [
+    { to: '/receptionist/enquiries',   icon: ChatBubbleLeftRightIcon, label: 'Enquiries' },
     { to: '/receptionist/enrollments', icon: UserPlusIcon,           label: 'Enrollments' },
     { to: '/receptionist/fees',        icon: CurrencyRupeeIcon,      label: 'Fee Collection' },
     { to: '/receptionist/receipts',    icon: DocumentTextIcon,       label: 'Receipts' },

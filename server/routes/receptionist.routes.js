@@ -14,6 +14,12 @@ router.get('/batches', batchCtrl.listBatches);
 router.get('/batches/:id', batchCtrl.getBatch);
 router.get('/batches/:id/students', batchCtrl.getBatchStudents);
 
+// Enquiries (pre-enrollment leads)
+const enquiryCtrl = require('../controllers/enquiry.controller');
+router.get('/enquiries', permit('ENROLLMENT_MANAGE'), enquiryCtrl.listEnquiries);
+router.post('/enquiries', permit('ENROLLMENT_MANAGE'), enquiryCtrl.createEnquiry);
+router.patch('/enquiries/:id', permit('ENROLLMENT_MANAGE'), enquiryCtrl.updateEnquiry);
+
 // Student search + full profile summary
 router.get('/students/search', permit('ENROLLMENT_MANAGE'), studentSummaryCtrl.searchStudents);
 router.get('/students/:id/summary', permit('ENROLLMENT_MANAGE'), studentSummaryCtrl.getStudentSummary);

@@ -22,6 +22,7 @@ import MyChildren       from './pages/parent/MyChildren';
 
 // Receptionist
 import Enrollments  from './pages/receptionist/Enrollments';
+import Enquiries    from './pages/receptionist/Enquiries';
 import FeeCollection from './pages/receptionist/FeeCollection';
 import Receipts     from './pages/receptionist/Receipts';
 import Timetable    from './pages/receptionist/Timetable';
@@ -72,6 +73,7 @@ function App() {
 
         {/* Receptionist */}
         <Route path="receptionist/enrollments" element={<ProtectedRoute allowedRoles={['admin','receptionist']}><Enrollments /></ProtectedRoute>} />
+        <Route path="receptionist/enquiries"   element={<ProtectedRoute allowedRoles={['admin','receptionist']}><Enquiries /></ProtectedRoute>} />
         <Route path="receptionist/fees"        element={<ProtectedRoute allowedRoles={['admin','receptionist']}><FeeCollection /></ProtectedRoute>} />
         <Route path="receptionist/receipts"    element={<ProtectedRoute allowedRoles={['admin','receptionist']}><Receipts /></ProtectedRoute>} />
         <Route path="receptionist/timetable"   element={<ProtectedRoute allowedRoles={['admin','receptionist']}><Timetable /></ProtectedRoute>} />
