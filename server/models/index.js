@@ -19,4 +19,5 @@ module.exports = {
   ScheduleException: require('./ScheduleException'),
   Announcement: require('./Announcement'),
   Expense: require('./Expense'),
+  AttendanceSession: require('./AttendanceSession'),
 };

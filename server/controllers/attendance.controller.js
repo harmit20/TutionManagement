@@ -116,6 +116,91 @@ exports.updateAttendance = asyncHandler(async (req, res) => {
   res.json(record);
 });
 
+// ─── QR check-in ──────────────────────────────────────────────────────────────
+
+const crypto = require('crypto');
+const AttendanceSession = require('../models/AttendanceSession');
+
+const SESSION_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+/** Teacher: open a QR check-in session for one of their batches (today). */
+exports.createCheckInSession = asyncHandler(async (req, res) => {
+  const { batchId } = req.body;
+  if (!batchId) return res.status(400).json({ message: 'batchId is required' });
+
+  const profile = await TeacherProfile.findOne({ user: req.user._id });
+  if (!profile) return res.status(404).json({ message: 'Teacher profile not found' });
+
+  const batch = await Batch.findOne({ _id: batchId, assignedTeacher: profile._id });
+  if (!batch) return res.status(403).json({ message: 'Not your batch' });
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const session = await AttendanceSession.create({
+    batch: batchId,
+    teacher: profile._id,
+    date: today,
+    token: crypto.randomBytes(16).toString('hex'),
+    expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+  });
+
+  res.status(201).json({ token: session.token, expiresAt: session.expiresAt });
+});
+
+/** Student: check in by scanning (or typing) the session token. */
+exports.checkIn = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ message: 'token is required' });
+
+  const session = await AttendanceSession.findOne({ token: token.trim() }).populate('batch', 'name students');
+  if (!session || session.expiresAt < new Date()) {
+    return res.status(410).json({ message: 'This check-in code has expired — ask your teacher for a new one' });
+  }
+
+  const profile = await StudentProfile.findOne({ user: req.user._id });
+  if (!profile) return res.status(404).json({ message: 'Student profile not found' });
+
+  const enrolled = session.batch.students.some((s) => s.toString() === profile._id.toString());
+  if (!enrolled) return res.status(403).json({ message: 'You are not enrolled in this batch' });
+
+  // Upsert today's record and mark this student present
+  const record = await AttendanceRecord.findOne({ batch: session.batch._id, date: session.date });
+  if (record) {
+    const entry = record.students.find((s) => s.student.toString() === profile._id.toString());
+    if (entry) entry.status = 'present';
+    else record.students.push({ student: profile._id, status: 'present' });
+    record.markedAt = new Date();
+    await record.save();
+  } else {
+    await AttendanceRecord.create({
+      batch: session.batch._id,
+      teacher: session.teacher,
+      date: session.date,
+      students: [{ student: profile._id, status: 'present' }],
+      markedBy: req.user._id,
+    });
+  }
+
+  res.json({ message: `Checked in to ${session.batch.name}`, batch: session.batch.name });
+});
+
+/** Teacher: live count of who has checked in for a session's class. */
+exports.getCheckInStatus = asyncHandler(async (req, res) => {
+  const session = await AttendanceSession.findOne({ token: req.params.token });
+  if (!session) return res.status(404).json({ message: 'Session not found' });
+
+  const record = await AttendanceRecord.findOne({ batch: session.batch, date: session.date })
+    .populate({ path: 'students.student', select: 'user', populate: { path: 'user', select: 'name' } });
+
+  const present = (record?.students || []).filter((s) => s.status === 'present');
+  res.json({
+    presentCount: present.length,
+    present: present.map((s) => s.student?.user?.name).filter(Boolean),
+    expiresAt: session.expiresAt,
+  });
+});
+
 // ─── Student (own attendance) ─────────────────────────────────────────────────
 
 exports.getMyAttendance = asyncHandler(async (req, res) => {

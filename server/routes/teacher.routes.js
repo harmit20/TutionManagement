@@ -34,6 +34,10 @@ router.post('/attendance', attendanceCtrl.markAttendance);
 router.get('/attendance/:batchId', attendanceCtrl.getAttendanceByBatch);
 router.patch('/attendance/:id', attendanceCtrl.updateAttendance);
 
+// QR check-in sessions
+router.post('/attendance-sessions', attendanceCtrl.createCheckInSession);
+router.get('/attendance-sessions/:token/status', attendanceCtrl.getCheckInStatus);
+
 // Timetable (read-only)
 router.get('/timetable', timetableCtrl.getFullTimetable);
 

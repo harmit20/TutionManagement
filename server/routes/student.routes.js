@@ -28,6 +28,7 @@ router.post('/fees/:id/pay/confirm', paymentCtrl.confirmPayment);
 
 // Attendance (own)
 router.get('/attendance', attendanceCtrl.getMyAttendance);
+router.post('/attendance/check-in', attendanceCtrl.checkIn);
 
 // Tests & Results (own)
 router.get('/tests', testCtrl.getMyTests);

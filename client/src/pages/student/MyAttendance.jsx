@@ -5,6 +5,7 @@ import PageHeader from '../../components/shared/PageHeader';
 import Badge from '../../components/shared/Badge';
 import Spinner from '../../components/shared/Spinner';
 import EmptyState from '../../components/shared/EmptyState';
+import QrCheckIn from '../../components/shared/QrCheckIn';
 
 function AttendanceBar({ percent }) {
   const color = percent >= 75 ? 'bg-green-500' : percent >= 50 ? 'bg-yellow-400' : 'bg-red-500';
@@ -28,7 +29,7 @@ export default function MyAttendance() {
 
   return (
     <div>
-      <PageHeader title="My Attendance" subtitle="Attendance across all your batches" />
+      <PageHeader title="My Attendance" subtitle="Attendance across all your batches" action={<QrCheckIn />} />
 
       {/* Per-batch summary */}
       {data?.summary?.length > 0 && (

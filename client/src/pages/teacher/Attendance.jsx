@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import QRCode from 'qrcode';
 import api from '../../services/api';
 import PageHeader from '../../components/shared/PageHeader';
 import Spinner from '../../components/shared/Spinner';
 import EmptyState from '../../components/shared/EmptyState';
+import Modal from '../../components/shared/Modal';
 
 const STATUS = ['present', 'absent', 'late'];
 const STATUS_STYLE = {
@@ -20,6 +22,7 @@ export default function Attendance() {
   const [batchId, setBatchId] = useState('');
   const [date, setDate]       = useState(format(new Date(), 'yyyy-MM-dd'));
   const [marks, setMarks]     = useState({}); // { studentId: status }
+  const [qrSession, setQrSession] = useState(null); // { token, expiresAt, dataUrl }
 
   const { data: batches } = useQuery({
     queryKey: ['teacher-batches'],
@@ -47,6 +50,23 @@ export default function Attendance() {
       return { ...prev, [studentId]: next };
     });
   };
+
+  const qrMutation = useMutation({
+    mutationFn: () => api.post('/teacher/attendance-sessions', { batchId }).then((r) => r.data),
+    onSuccess: async (s) => {
+      const dataUrl = await QRCode.toDataURL(s.token, { width: 320, margin: 2 });
+      setQrSession({ ...s, dataUrl });
+    },
+    onError: (e) => toast.error(e.response?.data?.message || 'Could not start QR session'),
+  });
+
+  // Live check-in status while the QR modal is open
+  const { data: checkInStatus } = useQuery({
+    queryKey: ['checkin-status', qrSession?.token],
+    queryFn: () => api.get(`/teacher/attendance-sessions/${qrSession.token}/status`).then((r) => r.data),
+    enabled: !!qrSession,
+    refetchInterval: 4000,
+  });
 
   const submitMutation = useMutation({
     mutationFn: (payload) => api.post('/teacher/attendance', payload),
@@ -87,6 +107,9 @@ export default function Attendance() {
             <div className="flex gap-2">
               <button className="btn-secondary text-xs py-1.5 px-3" onClick={() => markAll('present')}>All Present</button>
               <button className="btn-secondary text-xs py-1.5 px-3" onClick={() => markAll('absent')}>All Absent</button>
+              <button className="btn-secondary text-xs py-1.5 px-3" disabled={qrMutation.isPending} onClick={() => qrMutation.mutate()}>
+                {qrMutation.isPending ? 'Starting…' : '🔳 QR Check-in'}
+              </button>
             </div>
             {students?.length > 0 && (
               <span className="text-sm text-gray-600">
@@ -133,6 +156,25 @@ export default function Attendance() {
           )}
         </>
       )}
+
+      {/* QR check-in modal */}
+      <Modal open={!!qrSession} onClose={() => setQrSession(null)} title="QR Check-in"
+        footer={<button className="btn-secondary" onClick={() => setQrSession(null)}>Close</button>}>
+        {qrSession && (
+          <div className="text-center space-y-3">
+            <img src={qrSession.dataUrl} alt="Check-in QR code" className="mx-auto rounded-lg border border-gray-100" />
+            <p className="text-sm text-gray-600">Students scan this in their app (Attendance → Scan QR) to mark themselves present.</p>
+            <p className="text-xs text-gray-400 font-mono select-all">Code: {qrSession.token}</p>
+            <p className="text-xs text-gray-400">Expires {format(new Date(qrSession.expiresAt), 'hh:mm a')}</p>
+            <div className="bg-green-50 rounded-lg px-4 py-3">
+              <p className="text-sm font-semibold text-green-800">{checkInStatus?.presentCount ?? 0} checked in</p>
+              {checkInStatus?.present?.length > 0 && (
+                <p className="text-xs text-green-700 mt-1">{checkInStatus.present.join(', ')}</p>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
