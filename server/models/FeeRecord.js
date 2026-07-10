@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const FEE_STATUS = ['pending', 'paid', 'overdue', 'partial', 'waived'];
 const PAYMENT_METHODS = ['cash', 'upi', 'bank_transfer', 'cheque', 'online'];
@@ -65,5 +66,7 @@ const feeRecordSchema = new mongoose.Schema(
 feeRecordSchema.index({ student: 1, forMonth: 1, forYear: 1 });
 feeRecordSchema.index({ status: 1, dueDate: 1 }); // cron job query
 feeRecordSchema.index({ batch: 1 });
+
+feeRecordSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('FeeRecord', feeRecordSchema);

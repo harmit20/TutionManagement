@@ -45,14 +45,29 @@ export default function Dashboard() {
         <StatCard label="Pending Fees"   value={data?.pendingFees}    icon={ExclamationTriangleIcon} color="yellow" to="/receptionist/fees"        />
       </div>
 
-      <div className="card mb-6">
-        <div className="flex items-center gap-3 mb-1">
-          <CurrencyRupeeIcon className="h-5 w-5 text-green-600" />
-          <span className="text-sm font-medium text-gray-600">Collected this month</span>
+      {/* Money this month */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="card">
+          <div className="flex items-center gap-2 mb-1">
+            <CurrencyRupeeIcon className="h-4 w-4 text-green-600" />
+            <span className="text-xs font-medium text-gray-500">Collected this month</span>
+          </div>
+          <p className="text-2xl font-bold text-green-700">₹{(data?.feeCollectedThisMonth ?? 0).toLocaleString('en-IN')}</p>
         </div>
-        <p className="text-3xl font-bold text-gray-900">
-          ₹{(data?.feeCollectedThisMonth ?? 0).toLocaleString('en-IN')}
-        </p>
+        <div className="card">
+          <p className="text-xs font-medium text-gray-500 mb-1">Teacher payouts</p>
+          <p className="text-2xl font-bold text-gray-900">₹{(data?.payoutsPaidThisMonth ?? 0).toLocaleString('en-IN')}</p>
+        </div>
+        <Link to="/admin/expenses" className="card hover:shadow-md transition-shadow">
+          <p className="text-xs font-medium text-gray-500 mb-1">Expenses</p>
+          <p className="text-2xl font-bold text-gray-900">₹{(data?.expensesThisMonth ?? 0).toLocaleString('en-IN')}</p>
+        </Link>
+        <div className="card">
+          <p className="text-xs font-medium text-gray-500 mb-1">Net this month</p>
+          <p className={`text-2xl font-bold ${(data?.netThisMonth ?? 0) >= 0 ? 'text-green-700' : 'text-red-600'}`}>
+            ₹{(data?.netThisMonth ?? 0).toLocaleString('en-IN')}
+          </p>
+        </div>
       </div>
 
       <div className="card">

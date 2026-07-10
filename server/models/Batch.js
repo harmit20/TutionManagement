@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const CLASS_LEVELS = ['11th', '12th', 'CET'];
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -59,5 +60,7 @@ const batchSchema = new mongoose.Schema(
 
 batchSchema.index({ classLevel: 1, subject: 1 });
 batchSchema.index({ assignedTeacher: 1 });
+
+batchSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('Batch', batchSchema);

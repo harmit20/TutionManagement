@@ -5,6 +5,7 @@ const enrollCtrl = require('../controllers/enrollment.controller');
 const feeCtrl = require('../controllers/fee.controller');
 const batchCtrl = require('../controllers/batch.controller');
 const timetableCtrl = require('../controllers/timetable.controller');
+const studentSummaryCtrl = require('../controllers/studentSummary.controller');
 
 router.use(protect);
 
@@ -12,6 +13,17 @@ router.use(protect);
 router.get('/batches', batchCtrl.listBatches);
 router.get('/batches/:id', batchCtrl.getBatch);
 router.get('/batches/:id/students', batchCtrl.getBatchStudents);
+
+// Enquiries (pre-enrollment leads)
+const enquiryCtrl = require('../controllers/enquiry.controller');
+router.get('/enquiries', permit('ENROLLMENT_MANAGE'), enquiryCtrl.listEnquiries);
+router.post('/enquiries', permit('ENROLLMENT_MANAGE'), enquiryCtrl.createEnquiry);
+router.patch('/enquiries/:id', permit('ENROLLMENT_MANAGE'), enquiryCtrl.updateEnquiry);
+
+// Student search + full profile summary
+router.get('/students/search', permit('ENROLLMENT_MANAGE'), studentSummaryCtrl.searchStudents);
+router.get('/students/:id/summary', permit('ENROLLMENT_MANAGE'), studentSummaryCtrl.getStudentSummary);
+router.get('/students/:id/report-card', permit('ENROLLMENT_MANAGE'), studentSummaryCtrl.getReportCard);
 
 // Enrollments
 router.get('/students', permit('ENROLLMENT_MANAGE'), enrollCtrl.listStudentsForEnrollment);
@@ -30,5 +42,11 @@ router.get('/timetable/batches/:batchId', timetableCtrl.getBatchSchedule);
 router.get('/timetable/conflict-check', timetableCtrl.checkConflict);
 router.post('/timetable/batches/:batchId/slots', permit('TIMETABLE_MANAGE'), timetableCtrl.addScheduleSlot);
 router.delete('/timetable/batches/:batchId/slots/:slotIndex', permit('TIMETABLE_MANAGE'), timetableCtrl.removeScheduleSlot);
+
+// Date-specific cancellations & substitutions
+router.get('/timetable/exceptions', timetableCtrl.listExceptions);
+router.post('/timetable/exceptions', permit('TIMETABLE_MANAGE'), timetableCtrl.createException);
+router.delete('/timetable/exceptions/:id', permit('TIMETABLE_MANAGE'), timetableCtrl.deleteException);
+router.get('/teachers', permit('TIMETABLE_MANAGE'), timetableCtrl.listTeachers);
 
 module.exports = router;

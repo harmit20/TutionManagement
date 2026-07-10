@@ -3,6 +3,8 @@ const FeeRecord = require('../models/FeeRecord');
 const FCMToken = require('../models/FCMToken');
 const StudentProfile = require('../models/StudentProfile');
 const { sendMulticast, deactivateTokens } = require('../utils/fcm.util');
+const { sendMessage } = require('../services/messaging');
+const templates = require('../services/messaging/templates');
 
 /**
  * Builds a date-range filter for a specific calendar day N days from now.
@@ -28,7 +30,10 @@ async function runFeeReminder() {
       ],
     })
       .select('student batch amount dueDate')
-      .populate({ path: 'student', select: 'user', populate: { path: 'user', select: '_id' } })
+      .populate({ path: 'student', select: 'user parentPhone parentUser', populate: [
+        { path: 'user', select: '_id name' },
+        { path: 'parentUser', select: 'phone' },
+      ] })
       .populate('batch', 'name subject')
       .lean();
 
@@ -52,6 +57,27 @@ async function runFeeReminder() {
     let skipped = 0;
 
     for (const { userId, fee } of byStudent.values()) {
+      const dueDate = new Date(fee.dueDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const daysLeft = Math.ceil((dueDate - today) / 86_400_000);
+      const urgency = daysLeft <= 1 ? '⚠️ Due Tomorrow!' : `Due in ${daysLeft} days`;
+
+      // WhatsApp/SMS to the parent — reaches them even without the app installed
+      const parentPhone = fee.student?.parentUser?.phone || fee.student?.parentPhone;
+      await sendMessage({
+        to: parentPhone,
+        template: 'fee_reminder',
+        body: templates.feeReminder({
+          studentName: fee.student?.user?.name,
+          batchName: fee.batch?.name ?? 'batch',
+          amount: fee.amount,
+          dueDate,
+          daysLeft,
+        }),
+        studentId: fee.student?._id,
+      });
+
       const tokenDocs = await FCMToken.find({ user: userId, isActive: true })
         .select('token')
         .lean();
@@ -60,12 +86,6 @@ async function runFeeReminder() {
         skipped++;
         continue;
       }
-
-      const dueDate = new Date(fee.dueDate);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const daysLeft = Math.ceil((dueDate - today) / 86_400_000);
-      const urgency = daysLeft <= 1 ? '⚠️ Due Tomorrow!' : `Due in ${daysLeft} days`;
 
       const tokens = tokenDocs.map((t) => t.token);
       const result = await sendMulticast(

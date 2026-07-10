@@ -34,6 +34,10 @@ router.post('/attendance', attendanceCtrl.markAttendance);
 router.get('/attendance/:batchId', attendanceCtrl.getAttendanceByBatch);
 router.patch('/attendance/:id', attendanceCtrl.updateAttendance);
 
+// QR check-in sessions
+router.post('/attendance-sessions', attendanceCtrl.createCheckInSession);
+router.get('/attendance-sessions/:token/status', attendanceCtrl.getCheckInStatus);
+
 // Timetable (read-only)
 router.get('/timetable', timetableCtrl.getFullTimetable);
 
@@ -45,6 +49,11 @@ router.get('/payouts/:id', payoutCtrl.getMyPayoutDetail);
 router.get('/tests', testCtrl.getMyBatchTests);
 router.post('/tests/:testId/results', testCtrl.enterResults);
 router.get('/tests/:testId/results', testCtrl.listResults);
+
+// Announcements (own batches)
+const announcementCtrl = require('../controllers/announcement.controller');
+router.get('/announcements', announcementCtrl.listAnnouncements);
+router.post('/announcements', announcementCtrl.createAnnouncement);
 
 // Study materials
 router.get('/materials', materialCtrl.getMyBatchMaterials);

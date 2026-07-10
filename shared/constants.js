@@ -3,6 +3,7 @@ const ROLES = Object.freeze({
   RECEPTIONIST: 'receptionist',
   TEACHER: 'teacher',
   STUDENT: 'student',
+  PARENT: 'parent',
 });
 
 const CLASS_LEVELS = Object.freeze(['11th', '12th', 'CET']);
@@ -49,7 +50,10 @@ const PERMISSIONS = Object.freeze({
 
   // Push Notifications
   NOTIFICATION_SEND: [ROLES.ADMIN],
-  NOTIFICATION_RECEIVE: [ROLES.TEACHER, ROLES.STUDENT, ROLES.RECEPTIONIST],
+  NOTIFICATION_RECEIVE: [ROLES.TEACHER, ROLES.STUDENT, ROLES.RECEPTIONIST, ROLES.PARENT],
+
+  // Parent portal
+  PARENT_VIEW_CHILDREN: [ROLES.PARENT],
 });
 
 module.exports = { ROLES, CLASS_LEVELS, PERMISSIONS };

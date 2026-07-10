@@ -3,6 +3,7 @@ import {
   Squares2X2Icon, UsersIcon, CurrencyRupeeIcon, BanknotesIcon, ChartBarIcon,
   UserPlusIcon, DocumentTextIcon, CalendarIcon, BookOpenIcon,
   ClipboardDocumentCheckIcon, FolderOpenIcon, CalendarDaysIcon,
+  ShieldCheckIcon, ChatBubbleLeftRightIcon, ReceiptPercentIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../context/AuthContext';
 
@@ -12,9 +13,13 @@ const NAV = {
     { to: '/admin/users',    icon: UsersIcon,               label: 'Users' },
     { to: '/admin/pricing',  icon: CurrencyRupeeIcon,       label: 'Pricing' },
     { to: '/admin/payouts',  icon: BanknotesIcon,           label: 'Payouts' },
+    { to: '/admin/expenses', icon: ReceiptPercentIcon,      label: 'Expenses' },
     { to: '/admin/reports',  icon: ChartBarIcon,            label: 'Reports' },
+    { to: '/admin/messages', icon: ChatBubbleLeftRightIcon, label: 'Messages' },
+    { to: '/admin/audit',    icon: ShieldCheckIcon,         label: 'Audit Log' },
   ],
   receptionist: [
+    { to: '/receptionist/enquiries',   icon: ChatBubbleLeftRightIcon, label: 'Enquiries' },
     { to: '/receptionist/enrollments', icon: UserPlusIcon,           label: 'Enrollments' },
     { to: '/receptionist/fees',        icon: CurrencyRupeeIcon,      label: 'Fee Collection' },
     { to: '/receptionist/receipts',    icon: DocumentTextIcon,       label: 'Receipts' },
@@ -30,6 +35,10 @@ const NAV = {
     { to: '/student/tests',      icon: DocumentTextIcon,  label: 'Tests' },
     { to: '/student/attendance', icon: CalendarDaysIcon,  label: 'Attendance' },
     { to: '/student/materials',  icon: FolderOpenIcon,    label: 'Materials' },
+    { to: '/student/announcements', icon: ChatBubbleLeftRightIcon, label: 'Announcements' },
+  ],
+  parent: [
+    { to: '/parent', icon: UsersIcon, label: 'My Children', end: true },
   ],
 };
 
@@ -38,7 +47,7 @@ export default function Sidebar() {
   const links = NAV[user?.role] ?? [];
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-100 min-h-screen">
+    <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-100 min-h-screen print:hidden">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-gray-100">
         <span className="text-lg font-bold text-indigo-600">TuitionApp</span>

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const bankDetailsSchema = new mongoose.Schema(
   {
@@ -37,5 +38,7 @@ const teacherProfileSchema = new mongoose.Schema(
 );
 
 teacherProfileSchema.index({ user: 1 });
+
+teacherProfileSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('TeacherProfile', teacherProfileSchema);

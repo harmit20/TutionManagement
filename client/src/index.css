@@ -23,8 +23,8 @@
            rounded-lg text-sm font-medium transition-colors;
   }
   .input {
-    @apply block w-full rounded-lg border border-gray-300 bg-white
-           px-3 py-2 text-sm shadow-sm placeholder-gray-400
+    @apply block w-full h-10 rounded-lg border border-gray-300 bg-white
+           px-3 text-sm shadow-sm placeholder-gray-400
            focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500;
   }
   .label { @apply block text-sm font-medium text-gray-700 mb-1; }

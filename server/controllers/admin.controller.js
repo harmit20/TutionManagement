@@ -8,6 +8,10 @@ const AttendanceRecord = require('../models/AttendanceRecord');
 const PricingRule = require('../models/PricingRule');
 const PaymentLedger = require('../models/PaymentLedger');
 const Classroom = require('../models/Classroom');
+const AuditLog = require('../models/AuditLog');
+const MessageLog = require('../models/MessageLog');
+const Expense = require('../models/Expense');
+const { audit } = require('../utils/audit');
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
@@ -22,6 +26,8 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     totalBatches,
     pendingFees,
     feeAgg,
+    expenseAgg,
+    payoutAgg,
     recentEnrollments,
   ] = await Promise.all([
     User.countDocuments({ role: 'student', isActive: true }),
@@ -32,18 +38,33 @@ exports.getDashboard = asyncHandler(async (req, res) => {
       { $match: { status: 'paid', paidDate: { $gte: monthStart, $lte: monthEnd } } },
       { $group: { _id: null, total: { $sum: '$amountPaid' } } },
     ]),
+    Expense.aggregate([
+      { $match: { isDeleted: { $ne: true }, date: { $gte: monthStart, $lte: monthEnd } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]),
+    PaymentLedger.aggregate([
+      { $match: { status: 'paid', paidOn: { $gte: monthStart, $lte: monthEnd } } },
+      { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+    ]),
     StudentProfile.find()
       .sort({ createdAt: -1 })
       .limit(5)
       .populate('user', 'name email'),
   ]);
 
+  const feeCollectedThisMonth = feeAgg[0]?.total ?? 0;
+  const expensesThisMonth = expenseAgg[0]?.total ?? 0;
+  const payoutsPaidThisMonth = payoutAgg[0]?.total ?? 0;
+
   res.json({
     totalStudents,
     totalTeachers,
     totalBatches,
     pendingFees,
-    feeCollectedThisMonth: feeAgg[0]?.total ?? 0,
+    feeCollectedThisMonth,
+    expensesThisMonth,
+    payoutsPaidThisMonth,
+    netThisMonth: feeCollectedThisMonth - expensesThisMonth - payoutsPaidThisMonth,
     recentEnrollments,
   });
 });
@@ -149,6 +170,7 @@ exports.createPricingRule = asyncHandler(async (req, res) => {
     createdBy: req.user._id,
   });
 
+  audit(req, 'pricing.create', 'PricingRule', rule._id, { teacherId: profile._id, ratePerLecture });
   res.status(201).json(rule);
 });
 
@@ -175,6 +197,96 @@ exports.updateClassroom = asyncHandler(async (req, res) => {
   });
   if (!classroom) return res.status(404).json({ message: 'Classroom not found' });
   res.json(classroom);
+});
+
+// ─── Centres (branches) ───────────────────────────────────────────────────────
+
+const Centre = require('../models/Centre');
+
+exports.listCentres = asyncHandler(async (req, res) => {
+  const centres = await Centre.find().sort({ name: 1 });
+  res.json(centres);
+});
+
+exports.createCentre = asyncHandler(async (req, res) => {
+  const { name, code, address, phone } = req.body;
+  if (!name || !code) return res.status(400).json({ message: 'name and code are required' });
+
+  const existing = await Centre.findOne({ code: code.toUpperCase() });
+  if (existing) return res.status(409).json({ message: 'A centre with this code already exists' });
+
+  const centre = await Centre.create({ name, code, address, phone });
+  audit(req, 'centre.create', 'Centre', centre._id, { name, code });
+  res.status(201).json(centre);
+});
+
+exports.updateCentre = asyncHandler(async (req, res) => {
+  const { name, address, phone, isActive } = req.body;
+  const centre = await Centre.findByIdAndUpdate(
+    req.params.id,
+    { name, address, phone, isActive },
+    { new: true, runValidators: true }
+  );
+  if (!centre) return res.status(404).json({ message: 'Centre not found' });
+  audit(req, 'centre.update', 'Centre', centre._id, { name, isActive });
+  res.json(centre);
+});
+
+// ─── Parent linking ───────────────────────────────────────────────────────────
+
+exports.linkParentChildren = asyncHandler(async (req, res) => {
+  const { childStudentIds = [] } = req.body;
+  const parent = await User.findOne({ _id: req.params.userId, role: 'parent' });
+  if (!parent) return res.status(404).json({ message: 'Parent user not found' });
+
+  // Replace this parent's links with the given set
+  await StudentProfile.updateMany({ parentUser: parent._id }, { $unset: { parentUser: 1 } });
+  if (childStudentIds.length) {
+    await StudentProfile.updateMany({ _id: { $in: childStudentIds } }, { parentUser: parent._id });
+  }
+
+  audit(req, 'parent.linkChildren', 'User', parent._id, { childStudentIds });
+  const children = await StudentProfile.find({ parentUser: parent._id }).populate('user', 'name');
+  res.json({ children });
+});
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+
+exports.listAuditLogs = asyncHandler(async (req, res) => {
+  const { action, entityType, page = 1, limit = 25 } = req.query;
+  const filter = {};
+  if (action) filter.action = action;
+  if (entityType) filter.entityType = entityType;
+
+  const [logs, total] = await Promise.all([
+    AuditLog.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit)),
+    AuditLog.countDocuments(filter),
+  ]);
+
+  res.json({ logs, total, page: Number(page), pages: Math.ceil(total / limit) });
+});
+
+// ─── Message Log ──────────────────────────────────────────────────────────────
+
+exports.listMessageLogs = asyncHandler(async (req, res) => {
+  const { template, status, page = 1, limit = 25 } = req.query;
+  const filter = {};
+  if (template) filter.template = template;
+  if (status) filter.status = status;
+
+  const [logs, total] = await Promise.all([
+    MessageLog.find(filter)
+      .populate({ path: 'student', select: 'user', populate: { path: 'user', select: 'name' } })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit)),
+    MessageLog.countDocuments(filter),
+  ]);
+
+  res.json({ logs, total, page: Number(page), pages: Math.ceil(total / limit) });
 });
 
 // ─── Reports ──────────────────────────────────────────────────────────────────

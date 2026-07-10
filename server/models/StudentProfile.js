@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const CLASS_LEVELS = ['11th', '12th', 'CET'];
 
@@ -32,6 +33,11 @@ const studentProfileSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    // Linked parent login — one parent account can be linked to several children
+    parentUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     address: {
       type: String,
       trim: true,
@@ -53,5 +59,7 @@ const studentProfileSchema = new mongoose.Schema(
 studentProfileSchema.index({ user: 1 });
 studentProfileSchema.index({ enrollmentNumber: 1 });
 studentProfileSchema.index({ classLevel: 1 });
+
+studentProfileSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('StudentProfile', studentProfileSchema);

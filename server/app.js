@@ -16,16 +16,19 @@ app.use(cors({
   credentials: true,
 }));
 
+// Relaxed limits outside production so local development isn't throttled
+const isProd = process.env.NODE_ENV === 'production';
+
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: isProd ? 200 : 5000,
   standardHeaders: true,
   legacyHeaders: false,
 }));
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 15,
+  max: isProd ? 15 : 500,
   message: { message: 'Too many auth requests, try again later.' },
 });
 
@@ -42,6 +45,7 @@ app.use('/api/admin',                      require('./routes/admin.routes'));
 app.use('/api/receptionist',               require('./routes/receptionist.routes'));
 app.use('/api/teacher',                    require('./routes/teacher.routes'));
 app.use('/api/student',                    require('./routes/student.routes'));
+app.use('/api/parent',                     require('./routes/parent.routes'));
 app.use('/api/timetable',                  require('./routes/timetable.routes'));
 app.use('/api/notifications',              require('./routes/notification.routes'));
 

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const FILE_TYPES = ['pdf', 'image', 'video', 'doc', 'link', 'other'];
 
@@ -49,11 +50,18 @@ const studyMaterialSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Soft delete — deleted materials are hidden from queries but retained
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
 studyMaterialSchema.index({ batch: 1 });
 studyMaterialSchema.index({ uploadedBy: 1 });
+
+studyMaterialSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('StudyMaterial', studyMaterialSchema);

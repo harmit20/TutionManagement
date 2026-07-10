@@ -48,7 +48,12 @@ export default function Enrollments() {
         <input className="input max-w-sm" placeholder="Search students…" value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
-      {loadingStudents ? <Spinner /> : !students?.length ? <EmptyState title="No students found" /> : (
+      {loadingStudents ? <Spinner /> : !students?.length ? (
+        <EmptyState
+          title="No students found"
+          description={search ? 'Try a different search term.' : 'Students appear here once accounts are created by the admin.'}
+        />
+      ) : (
         <div className="space-y-3">
           {students.map((s) => (
             <div key={s._id} className="card">

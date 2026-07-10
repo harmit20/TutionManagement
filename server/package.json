@@ -31,5 +31,8 @@
     "mongodb-memory-server": "^9.1.6",
     "nodemon": "^3.0.1",
     "supertest": "^6.3.4"
+  },
+  "allowScripts": {
+    "mongodb-memory-server@9.5.0": true
   }
 }

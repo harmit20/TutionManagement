@@ -5,6 +5,7 @@ const adminCtrl = require('../controllers/admin.controller');
 const batchCtrl = require('../controllers/batch.controller');
 const payoutCtrl = require('../controllers/payout.controller');
 const authCtrl = require('../controllers/auth.controller');
+const studentSummaryCtrl = require('../controllers/studentSummary.controller');
 
 // All admin routes require authentication + admin role
 router.use(protect, permit('USER_READ_ALL'));
@@ -26,6 +27,11 @@ router.post('/batches', batchCtrl.createBatch);
 router.get('/batches/:id', batchCtrl.getBatch);
 router.patch('/batches/:id', batchCtrl.updateBatch);
 
+// Centres (branches)
+router.get('/centres', adminCtrl.listCentres);
+router.post('/centres', adminCtrl.createCentre);
+router.patch('/centres/:id', adminCtrl.updateCentre);
+
 // Classrooms
 router.get('/classrooms', adminCtrl.listClassrooms);
 router.post('/classrooms', adminCtrl.createClassroom);
@@ -43,5 +49,30 @@ router.patch('/payouts/:id/pay', permit('PAYOUT_MANAGE'), payoutCtrl.markPaid);
 // Reports
 router.get('/reports/fees', adminCtrl.feeReport);
 router.get('/reports/attendance', adminCtrl.attendanceReport);
+
+// Expenses
+const expenseCtrl = require('../controllers/expense.controller');
+router.get('/expenses', permit('PAYOUT_MANAGE'), expenseCtrl.listExpenses);
+router.post('/expenses', permit('PAYOUT_MANAGE'), expenseCtrl.createExpense);
+router.delete('/expenses/:id', permit('PAYOUT_MANAGE'), expenseCtrl.deleteExpense);
+
+// Announcements (any batch or centre-wide)
+const announcementCtrl = require('../controllers/announcement.controller');
+router.get('/announcements', announcementCtrl.listAnnouncements);
+router.post('/announcements', announcementCtrl.createAnnouncement);
+
+// Audit log
+router.get('/audit-logs', adminCtrl.listAuditLogs);
+
+// Outbound message log (WhatsApp/SMS alerts)
+router.get('/message-logs', adminCtrl.listMessageLogs);
+
+// Parent → children linking
+router.patch('/parents/:userId/children', permit('USER_UPDATE'), adminCtrl.linkParentChildren);
+
+// Student search + full profile summary
+router.get('/students/search', studentSummaryCtrl.searchStudents);
+router.get('/students/:id/summary', studentSummaryCtrl.getStudentSummary);
+router.get('/students/:id/report-card', studentSummaryCtrl.getReportCard);
 
 module.exports = router;

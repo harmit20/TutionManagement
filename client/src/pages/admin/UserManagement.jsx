@@ -5,20 +5,22 @@ import toast from 'react-hot-toast';
 import api from '../../services/api';
 import PageHeader from '../../components/shared/PageHeader';
 import Badge from '../../components/shared/Badge';
-import Spinner from '../../components/shared/Spinner';
 import Modal from '../../components/shared/Modal';
-import EmptyState from '../../components/shared/EmptyState';
+import DataTable from '../../components/shared/DataTable';
+import FilterBar from '../../components/shared/FilterBar';
+import Pagination from '../../components/shared/Pagination';
 
-const ROLES = ['admin', 'receptionist', 'teacher', 'student'];
+const ROLES = ['admin', 'receptionist', 'teacher', 'student', 'parent'];
 const CLASS_LEVELS = ['11th', '12th', 'CET'];
 
-const blank = { name: '', email: '', password: '', role: 'student', phone: '', enrollmentNumber: '', classLevel: '11th', parentName: '', parentPhone: '' };
+const blank = { name: '', email: '', password: '', role: 'student', phone: '', enrollmentNumber: '', classLevel: '11th', parentName: '', parentPhone: '', childStudentIds: [] };
 
 export default function UserManagement() {
   const qc = useQueryClient();
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState(searchParams.get('role') ?? '');
+  const [page, setPage] = useState(1);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(blank);
 
@@ -28,8 +30,15 @@ export default function UserManagement() {
   const [editForm, setEditForm] = useState({});
 
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-users', search, roleFilter],
-    queryFn: () => api.get('/admin/users', { params: { search, role: roleFilter } }).then((r) => r.data),
+    queryKey: ['admin-users', search, roleFilter, page],
+    queryFn: () => api.get('/admin/users', { params: { search, role: roleFilter, page } }).then((r) => r.data),
+  });
+
+  // Student list for linking children to a parent account
+  const { data: allStudents } = useQuery({
+    queryKey: ['students-for-linking'],
+    queryFn: () => api.get('/receptionist/students', { params: { limit: 200 } }).then((r) => r.data),
+    enabled: modal && form.role === 'parent',
   });
 
   const createMutation = useMutation({
@@ -107,54 +116,46 @@ export default function UserManagement() {
         action={<button className="btn-primary" onClick={() => setModal(true)}>+ New User</button>}
       />
 
-      {/* Filters */}
-      <div className="flex gap-3 mb-4 flex-wrap">
-        <input className="input max-w-xs" placeholder="Search name or email…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select className="input w-40" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+      <FilterBar className="mb-4">
+        <input className="input max-w-xs" placeholder="Search name or email…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+        <select className="input w-40" value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}>
           <option value="">All roles</option>
           {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
-      </div>
+      </FilterBar>
 
-      {isLoading ? <Spinner /> : (
-        <div className="card overflow-hidden p-0">
-          {!data?.users?.length ? <EmptyState title="No users found" /> : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-100">
-                  <tr>{['Name','Email','Role','Status','Actions'].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>
-                  ))}</tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {data.users.map((u) => (
-                    <tr key={u._id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium text-gray-900">{u.name}</td>
-                      <td className="px-4 py-3 text-gray-600">{u.email}</td>
-                      <td className="px-4 py-3"><Badge label={u.role} /></td>
-                      <td className="px-4 py-3"><Badge label={u.isActive ? 'active' : 'inactive'} /></td>
-                      <td className="px-4 py-3 flex items-center gap-3">
-                        <button
-                          className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
-                          onClick={() => openEdit(u)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className={`text-xs font-medium ${u.isActive ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}`}
-                          onClick={() => toggleMutation.mutate({ id: u._id, isActive: !u.isActive })}
-                        >
-                          {u.isActive ? 'Deactivate' : 'Activate'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
+      <DataTable
+        isLoading={isLoading}
+        rows={data?.users}
+        empty={{
+          title: 'No users found',
+          description: search || roleFilter ? 'Try changing the search or role filter.' : 'Create the first account to get started.',
+          action: !search && !roleFilter && <button className="btn-primary" onClick={() => setModal(true)}>+ New User</button>,
+        }}
+        columns={[
+          { header: 'Name', render: (u) => u.name, className: 'font-medium text-gray-900' },
+          { header: 'Email', render: (u) => u.email, className: 'text-gray-600' },
+          { header: 'Role', render: (u) => <Badge label={u.role} /> },
+          { header: 'Status', render: (u) => <Badge label={u.isActive ? 'active' : 'inactive'} /> },
+          {
+            header: 'Actions',
+            render: (u) => (
+              <div className="flex items-center gap-3">
+                <button className="text-xs font-medium text-indigo-600 hover:text-indigo-700" onClick={() => openEdit(u)}>
+                  Edit
+                </button>
+                <button
+                  className={`text-xs font-medium ${u.isActive ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}`}
+                  onClick={() => toggleMutation.mutate({ id: u._id, isActive: !u.isActive })}
+                >
+                  {u.isActive ? 'Deactivate' : 'Activate'}
+                </button>
+              </div>
+            ),
+          },
+        ]}
+      />
+      <Pagination page={data?.page} pages={data?.pages} total={data?.total} onPage={setPage} />
 
       {/* Create User Modal */}
       <Modal
@@ -183,6 +184,28 @@ export default function UserManagement() {
               {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
+          {form.role === 'parent' && (
+            <div>
+              <label className="label">Children <span className="text-gray-400 font-normal">(select the parent's students)</span></label>
+              <div className="border border-gray-300 rounded-lg max-h-44 overflow-y-auto divide-y divide-gray-50">
+                {!allStudents?.length ? (
+                  <p className="px-3 py-2.5 text-sm text-gray-400">No students available</p>
+                ) : allStudents.map((s) => (
+                  <label key={s._id} className="flex items-center gap-2.5 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      checked={form.childStudentIds.includes(s._id)}
+                      onChange={(e) => set('childStudentIds', e.target.checked
+                        ? [...form.childStudentIds, s._id]
+                        : form.childStudentIds.filter((id) => id !== s._id))}
+                    />
+                    <span>{s.user?.name} <span className="text-xs text-gray-400">({s.enrollmentNumber} · {s.classLevel})</span></span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
           {form.role === 'student' && (
             <>
               <div>

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const classroomSchema = new mongoose.Schema(
   {
@@ -21,5 +22,7 @@ const classroomSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+classroomSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('Classroom', classroomSchema);

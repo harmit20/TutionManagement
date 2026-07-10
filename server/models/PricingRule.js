@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const pricingRuleSchema = new mongoose.Schema(
   {
@@ -32,5 +33,7 @@ const pricingRuleSchema = new mongoose.Schema(
 
 // Payout engine queries: teacher + date range overlap
 pricingRuleSchema.index({ teacher: 1, effectiveFrom: 1, effectiveTo: 1 });
+
+pricingRuleSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('PricingRule', pricingRuleSchema);

@@ -4,6 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const StudyMaterial = require('../models/StudyMaterial');
 const TeacherProfile = require('../models/TeacherProfile');
 const StudentProfile = require('../models/StudentProfile');
+const { audit } = require('../utils/audit');
 
 // ─── Multer config (local disk; swap storage for S3 in prod) ─────────────────
 
@@ -83,7 +84,7 @@ exports.uploadMaterial = asyncHandler(async (req, res) => {
 
 exports.listMaterials = asyncHandler(async (req, res) => {
   const { batchId, fileType, page = 1, limit = 20 } = req.query;
-  const filter = {};
+  const filter = { isDeleted: { $ne: true } };
   if (batchId) filter.batch = batchId;
   if (fileType) filter.fileType = fileType;
 
@@ -113,7 +114,11 @@ exports.deleteMaterial = asyncHandler(async (req, res) => {
     return res.status(403).json({ message: 'Only the uploader or admin can delete this material' });
   }
 
-  await material.deleteOne();
+  // Soft delete: hide from queries but keep the record (and the file) recoverable
+  material.isDeleted = true;
+  await material.save();
+
+  audit(req, 'material.delete', 'StudyMaterial', material._id, { title: material.title });
   res.json({ message: 'Material deleted' });
 });
 
@@ -123,7 +128,7 @@ exports.getMyMaterials = asyncHandler(async (req, res) => {
   const profile = await StudentProfile.findOne({ user: req.user._id });
   if (!profile) return res.status(404).json({ message: 'Student profile not found' });
 
-  const materials = await StudyMaterial.find({ batch: { $in: profile.batches } })
+  const materials = await StudyMaterial.find({ batch: { $in: profile.batches }, isDeleted: { $ne: true } })
     .populate('batch', 'name subject')
     .populate('uploadedBy', 'name')
     .sort({ createdAt: -1 });
@@ -136,7 +141,7 @@ exports.getMyBatchMaterials = asyncHandler(async (req, res) => {
   const profile = await TeacherProfile.findOne({ user: req.user._id });
   if (!profile) return res.status(404).json({ message: 'Teacher profile not found' });
 
-  const materials = await StudyMaterial.find({ batch: { $in: profile.assignedBatches } })
+  const materials = await StudyMaterial.find({ batch: { $in: profile.assignedBatches }, isDeleted: { $ne: true } })
     .populate('batch', 'name subject')
     .sort({ createdAt: -1 });
 

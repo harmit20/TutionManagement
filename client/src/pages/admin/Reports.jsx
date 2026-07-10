@@ -4,6 +4,10 @@ import api from '../../services/api';
 import PageHeader from '../../components/shared/PageHeader';
 import Spinner from '../../components/shared/Spinner';
 import Badge from '../../components/shared/Badge';
+import DataTable from '../../components/shared/DataTable';
+import EmptyState from '../../components/shared/EmptyState';
+import FilterBar, { TabGroup } from '../../components/shared/FilterBar';
+import MonthStepper from '../../components/shared/MonthStepper';
 
 const now = new Date();
 
@@ -29,21 +33,16 @@ export default function AdminReports() {
       <PageHeader title="Reports" subtitle="Aggregate data by month" />
 
       {/* Filters */}
-      <div className="flex gap-3 mb-6 flex-wrap items-center">
-        <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-          {['fees','attendance'].map((t) => (
-            <button key={t} onClick={() => setTab(t)} className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${tab === t ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}>{t}</button>
-          ))}
-        </div>
-        <select className="input w-32" value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-          {Array.from({length:12},(_,i)=><option key={i+1} value={i+1}>{new Date(2000,i).toLocaleString('en',{month:'short'})}</option>)}
-        </select>
-        <input className="input w-28" type="number" value={year} onChange={(e) => setYear(Number(e.target.value))} />
-      </div>
+      <FilterBar>
+        <TabGroup options={['fees','attendance']} value={tab} onChange={setTab} />
+        <MonthStepper month={month} year={year} onChange={({ month: m, year: y }) => { setMonth(m); setYear(y); }} />
+      </FilterBar>
 
       {/* Fee Report */}
       {tab === 'fees' && (
-        feeQuery.isLoading ? <Spinner /> : (
+        feeQuery.isLoading ? <Spinner /> : !feeQuery.data?.length ? (
+          <div className="card p-0"><EmptyState title="No fee data" description="No fee records exist for this month." /></div>
+        ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {feeQuery.data?.map((row) => (
               <div key={row._id} className="card text-center">
@@ -59,32 +58,19 @@ export default function AdminReports() {
 
       {/* Attendance Report */}
       {tab === 'attendance' && (
-        attQuery.isLoading ? <Spinner /> : (
-          <div className="card overflow-hidden p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-100">
-                  <tr>{['Batch','Date','Present','Absent','Rate'].map((h) => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">{h}</th>
-                  ))}</tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {attQuery.data?.map((r, i) => (
-                    <tr key={i} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium">{r.batch?.name}</td>
-                      <td className="px-4 py-3 text-gray-600">{new Date(r.date).toLocaleDateString('en-IN')}</td>
-                      <td className="px-4 py-3 text-green-700">{r.present}</td>
-                      <td className="px-4 py-3 text-red-600">{r.absent}</td>
-                      <td className="px-4 py-3">
-                        <span className={`font-medium ${r.attendanceRate >= 75 ? 'text-green-700' : 'text-red-600'}`}>{r.attendanceRate}%</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )
+        <DataTable
+          isLoading={attQuery.isLoading}
+          rows={attQuery.data}
+          rowKey={(r) => `${r.batch?._id}-${r.date}`}
+          empty={{ title: 'No attendance records', description: 'No attendance was marked in this month.' }}
+          columns={[
+            { header: 'Batch', render: (r) => r.batch?.name, className: 'font-medium' },
+            { header: 'Date', render: (r) => new Date(r.date).toLocaleDateString('en-IN'), className: 'text-gray-600' },
+            { header: 'Present', render: (r) => r.present, className: 'text-green-700' },
+            { header: 'Absent', render: (r) => r.absent, className: 'text-red-600' },
+            { header: 'Rate', render: (r) => <span className={`font-medium ${r.attendanceRate >= 75 ? 'text-green-700' : 'text-red-600'}`}>{r.attendanceRate}%</span> },
+          ]}
+        />
       )}
     </div>
   );

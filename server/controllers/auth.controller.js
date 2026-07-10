@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const StudentProfile = require('../models/StudentProfile');
 const TeacherProfile = require('../models/TeacherProfile');
+const { audit } = require('../utils/audit');
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
 
@@ -92,7 +93,8 @@ exports.createUser = async (req, res) => {
   const existing = await User.findOne({ email });
   if (existing) return res.status(409).json({ message: 'Email already registered' });
 
-  const user = await User.create({ name, email, passwordHash: password, role, phone });
+  // New accounts belong to the creator's branch (null = default centre)
+  const user = await User.create({ name, email, passwordHash: password, role, phone, centre: req.user.centre ?? null });
 
   try {
     if (role === 'student') {
@@ -103,12 +105,18 @@ exports.createUser = async (req, res) => {
       await StudentProfile.create({ user: user._id, enrollmentNumber, classLevel, parentName, parentPhone, address, dateOfBirth });
     } else if (role === 'teacher') {
       await TeacherProfile.create({ user: user._id, ...profileData });
+    } else if (role === 'parent' && profileData.childStudentIds?.length) {
+      await StudentProfile.updateMany(
+        { _id: { $in: profileData.childStudentIds } },
+        { parentUser: user._id }
+      );
     }
   } catch (err) {
     await User.findByIdAndDelete(user._id);
     return res.status(err.status || 500).json({ message: err.message });
   }
 
+  audit(req, 'user.create', 'User', user._id, { role, email });
   res.status(201).json({ user: userPayload(user) });
 };
 
@@ -124,6 +132,7 @@ exports.updateUser = async (req, res) => {
   );
 
   if (!user) return res.status(404).json({ message: 'User not found' });
+  audit(req, isActive === false ? 'user.deactivate' : 'user.update', 'User', user._id, { name, phone, isActive });
   res.json({ user: userPayload(user) });
 };
 
@@ -142,5 +151,6 @@ exports.changePassword = async (req, res) => {
   user.passwordHash = newPassword; // pre-save hook re-hashes
   await user.save();
 
+  audit(req, 'user.changePassword', 'User', user._id);
   res.json({ message: 'Password updated' });
 };

@@ -2,6 +2,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const PaymentLedger = require('../models/PaymentLedger');
 const TeacherProfile = require('../models/TeacherProfile');
 const { buildPayoutLines } = require('../utils/payoutCalculator');
+const { audit } = require('../utils/audit');
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
 
@@ -30,6 +31,7 @@ exports.calculatePayout = asyncHandler(async (req, res) => {
     { upsert: true, new: true }
   );
 
+  audit(req, 'payout.calculate', 'PaymentLedger', ledger._id, { teacherId: teacher._id, month, year, totalAmount });
   res.status(201).json(ledger);
 });
 
@@ -65,6 +67,7 @@ exports.markPaid = asyncHandler(async (req, res) => {
   ledger.remarks = remarks;
   await ledger.save();
 
+  audit(req, 'payout.markPaid', 'PaymentLedger', ledger._id, { totalAmount: ledger.totalAmount, month: ledger.month, year: ledger.year });
   res.json(ledger);
 });
 

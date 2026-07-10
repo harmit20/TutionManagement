@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const centrePlugin = require('../utils/centrePlugin');
 
 const ATTENDANCE_STATUS = ['present', 'absent', 'late'];
 
@@ -54,5 +55,7 @@ const attendanceRecordSchema = new mongoose.Schema(
 attendanceRecordSchema.index({ batch: 1, date: 1 }, { unique: true });
 attendanceRecordSchema.index({ teacher: 1, date: 1 }); // payout calculation query
 attendanceRecordSchema.index({ date: 1 });
+
+attendanceRecordSchema.plugin(centrePlugin);
 
 module.exports = mongoose.model('AttendanceRecord', attendanceRecordSchema);

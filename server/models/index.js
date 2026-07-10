@@ -12,4 +12,13 @@ module.exports = {
   TestResult: require('./TestResult'),
   StudyMaterial: require('./StudyMaterial'),
   FCMToken: require('./FCMToken'),
+  AuditLog: require('./AuditLog'),
+  MessageLog: require('./MessageLog'),
+  PaymentTransaction: require('./PaymentTransaction'),
+  Enquiry: require('./Enquiry'),
+  ScheduleException: require('./ScheduleException'),
+  Announcement: require('./Announcement'),
+  Expense: require('./Expense'),
+  AttendanceSession: require('./AttendanceSession'),
+  Centre: require('./Centre'),
 };
